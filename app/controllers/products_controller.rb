@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ProductsController < ApplicationController
-  before_action :find_product, only: %i[show edit update destroy send_product_card]
+  before_action :find_product, only: %i[show edit update destroy]
   before_action :verify_tenant
   before_action :verify_user, except: %i[show index]
 
@@ -52,7 +52,15 @@ class ProductsController < ApplicationController
       @user.tenants << Tenant.current_tenant unless @user.tenants.include?(Tenant.current_tenant)
     end
     @product.user = @user
-    @product.statuses << Status.find(params[:status]['id'])
+
+    status_id = params.dig(:status, :id)
+    if status_id.present?
+      @product.statuses << Status.find(status_id)
+    else
+      flash[:error] = "Status is required"
+      render :new and return
+    end
+
     respond_to do |format|
       if @product.save
         UserNotifier.send_status_change_email(@user, @product,
@@ -105,10 +113,11 @@ class ProductsController < ApplicationController
   end
 
   def send_product_card
-    logger.debug "Send product card via email #{product.attributes.inspect}"
-    UserNotifier.send_product_card_email_pdf(product.user, product,
-                                             "#{tenant.name} - Product card - #{product.name}").deliver_now
-    redirect_to tenant_product_path(product.id, tenant_id: product.tenant_id), notice: 'Product card sent successfully.'
+    @product = Product.find(params[:product_id])
+    logger.debug "Send product card via email #{@product.attributes.inspect}"
+    UserNotifier.send_product_card_email_pdf(@product.user, @product,
+                                             "#{Tenant.current_tenant.name} - Product card - #{@product.name}").deliver_later
+    redirect_to tenant_product_path(@product.id, tenant_id: @product.tenant_id), notice: 'Product card sent successfully.'
   end
 
   private

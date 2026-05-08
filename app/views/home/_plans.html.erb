@@ -15,7 +15,7 @@
         </div>
         <p>
           <% if !current_user %>
-            <%= button_to 'Sign up for free', new_user_registration_path(plan: 'free'), class: 'btn btn-outline-secondary' %>
+            <%= link_to 'Sign up for free', new_user_registration_path(plan: 'free'), class: 'btn btn-outline-secondary' %>
           <% end %>
         </p>
       </div>
@@ -35,7 +35,7 @@
         </div>
         <p>
           <% if !current_user %>
-            <%= button_to 'Get started', new_user_registration_path(plan: 'premium'), class: 'btn btn-outline-secondary' %>
+            <%= link_to 'Get started', new_user_registration_path(plan: 'premium'), class: 'btn btn-outline-secondary' %>
           <% end %>
         </p>
       </div>

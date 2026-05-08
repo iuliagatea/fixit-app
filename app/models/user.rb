@@ -11,52 +11,53 @@ class User < ActiveRecord::Base
   has_many :products
   has_many :reviews, dependent: :destroy
 
-  before_create do |new_user|
-    if Thread.current[:tenant_id].blank? ||
-        !Thread.current[:tenant_id].kind_of?(Integer) ||
-        Thread.current[:tenant_id].zero?
+  before_create :check_tenant
+  after_create :add_to_tenant
+  before_destroy :clear_tenants
 
-      raise "no existing valid current tenant"
+  def save_and_invite_member
+    status = nil
+
+    if (self.email.blank?)
+      self.errors.add(:email, :blank)
+    elsif User.where([ "lower(email) = ?", self.email.downcase ]).present?
+      self.errors.add(:email, :taken)
+	else
+      check_or_set_password
+      status = self.save && self.errors.empty?
     end
-  end # before create callback do
+    logger.debug("User save_and_invite_member status: #{status}, errors: #{self.errors.full_messages.uniq.join(', ')}")
 
-    after_create do |new_user|
-      tenant = Tenant.find(Thread.current[:tenant_id])
-      unless tenant.users.include?(new_user)
-          tenant.users << new_user # add user to this tenant if not already there
-      end
-    end # before_create do
-
-    before_destroy do |old_user|
-      old_user.tenants.clear # remove all tenants for this user
-    end # before_destroy do
-
-    def save_and_invite_member
-      status = nil
-
-      if (self.email.blank?)
-        self.errors.add(:email, :blank)
-      elsif User.where([ "lower(email) = ?", self.email.downcase ]).present?
-        self.errors.add(:email, :taken)
-	  else
-        check_or_set_password
-        status = self.save && self.errors.empty?
-      end
-      logger.debug("User save_and_invite_member status: #{status}, errors: #{self.errors.full_messages.uniq.join(', ')}")
-
-      return status
-    end
+    status
+  end
 
     private
 
+    def check_tenant
+      if Thread.current[:tenant_id].blank? ||
+         !Thread.current[:tenant_id].is_a?(Integer) ||
+         Thread.current[:tenant_id].zero?
+        raise "no existing valid current tenant"
+      end
+    end
+
+    def add_to_tenant
+      tenant = Tenant.find(Thread.current[:tenant_id])
+      tenant.users << self unless tenant.users.include?(self)
+    end
+
+    def clear_tenants
+      tenants.clear
+    end
+
     def check_or_set_password
-        if self.password.blank?
-          self.password = Devise.friendly_token.first(Devise.password_length.first)
-             self.password_confirmation = self.password
-        else
-          # if a password is being supplied, then ok to skip
-          # setting up a password upon confirm
-          self.skip_confirm_change_password = true
-        end
+      if self.password.blank?
+        self.password = Devise.friendly_token.first(Devise.password_length.first)
+        self.password_confirmation = self.password
+      else
+        # if a password is being supplied, then ok to skip
+        # setting up a password upon confirm
+        self.skip_confirm_change_password = true
+      end
     end
 end

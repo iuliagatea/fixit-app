@@ -54,26 +54,28 @@ class ApplicationController < ActionController::Base
 # ------------------------------------------------------------------------------
   def authenticate_tenant!
     unless current_user.present? || authenticate_user!(force: true)
-      email = ( params.nil? || params[:user].nil?  ?  "<email missing>"  : params[:user][:email] )
-      flash[:error] = "cannot sign in as #{email}; check email/password"
-      logger.info(">>>>> [failed auth user] ") unless logger.nil?
+      email = params.dig(:user, :email) || "<email missing>"
+      flash[:error] = "Cannot sign in as #{email}; check email/password"
+      logger.info(">>>>> [failed auth user]") unless logger.nil?
+      redirect_to new_user_session_path and return
     end
 
     # user_signed_in? == true also means current_user returns valid user
-    raise SecurityError, "*** invalid user_signed_in  ***" unless user_signed_in?
-
-    Tenant.set_current_tenant(current_user) # relies on current_user being non-nil
-
-      # successful tenant authentication; do any callback
-    if self.respond_to?( :callback_authenticate_tenant, true )
-      logger.debug(">>>>> [auth_tenant callback]")
-      self.send( :callback_authenticate_tenant )
+    unless user_signed_in?
+      flash[:error] = "Invalid authentication"
+      redirect_to new_user_session_path and return
     end
 
-    true  # allows before filter chain to continue
-  end
+    Tenant.set_current_tenant(current_user)
 
-  private
+    # successful tenant authentication; do any callback
+    if respond_to?(:callback_authenticate_tenant, true)
+      logger.debug(">>>>> [auth_tenant callback]")
+      send(:callback_authenticate_tenant)
+    end
+
+    true
+  end
 
   def not_authorized_redirect
     redirect_to :root,

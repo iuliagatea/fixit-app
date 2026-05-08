@@ -1,15 +1,12 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-  seems_rateable
-  resources :categories
-  resources :estimates
+  root to: 'home#index'
+
   resources :reviews, param: :review_id
-  get 'about', to: 'pages#about'
   resources :tenants, param: :tenant_id
   resources :tenants, only: [] do
-    resources :statuses, param: :status_id
-    resources :statuses, only: [] do
+    resources :statuses do
       get 'products'
     end
     resources :products do
@@ -17,14 +14,14 @@ Rails.application.routes.draw do
       resources :estimates
     end
     resources :product_statuses
-    resources :user, only: [] do
+    resources :user do
       get 'products', to: 'tenant_member_products#index'
     end
-    # get 'user_products', to: 'tenant_member_products#index'
     get 'contact'
     post 'send_email'
   end
-  root to: 'home#index'
+
+  get 'about', to: 'pages#about'
   get 'get_name', to: 'members#get_name'
   get 'demand_offer', to: 'home#contact'
   post 'search', to: 'tenants#search'

@@ -2,6 +2,12 @@
 
 class Tenant < ActiveRecord::Base
   include PgSearch
+  include Tenantable
+  DEFAULT_STATUSES = [{ name: 'Received', color: '#428bca' },
+                      { name: 'In progress', color: '#d9534f' },
+                      { name: 'Completed', color: '#3c763d' },
+                      { name: 'Canceled', color: '#ad2f21' },
+                      { name: 'Waiting', color: '#d9cf14' }].freeze
   pg_search_scope :search_any_word,
                   against: %i[name description keywords],
                   associated_against: {
@@ -24,36 +30,16 @@ class Tenant < ActiveRecord::Base
   validates_uniqueness_of :name
   validate :must_have_one_category
 
-  before_destroy do |old_tenant|
-    old_tenant.users.clear # remove all users from this tenant
-    true
-  end
+  before_destroy :clear_associated_users
 
   default_scope { where("#{table_name}.tenant_id IS NULL") }
 
-  def self.create_new_tenant(tenant_params, _user_params)
-    tenant = Tenant.new(tenant_params)
-    tenant.categories << Category.where("name = 'Service / Reparatii'")
-    if new_signups_not_permitted?
-      raise 'Sorry, new accounts not permitted at this time'
-    end
-
-    tenant.save # create the tenant
-
-    Thread.current[:tenant_id]  = tenant.id # set the current tenant for this thread
-    tenant.create_statuses
-
-    tenant
+  def self.create_new_tenant(params, _user_params)
+    TenantCreate.call(params)
   end
 
   def create_statuses
-    statuses = [{ name: 'Received', color: '#428bca' }, { name: 'In progress', color: '#d9534f' },
-                { name: 'Completed', color: '#3c763d' }, { name: 'Canceled', color: '#ad2f21' },
-                { name: 'Waiting', color: '#d9cf14' }]
-    statuses.each do |s|
-      status = Status.new(name: s[:name], color: s[:color], tenant_id: id, can_be_deleted: false)
-      status.save
-    end
+    statuses.insert_all(DEFAULT_STATUSES.map { |s| s.merge(tenant_id: id, can_be_deleted: false) })
   end
 
   # ------------------------------------------------------------------------
@@ -78,40 +64,13 @@ class Tenant < ActiveRecord::Base
     Member.create_org_admin(user)
   end
 
-    def self.set_current_tenant(resource)
-      # able to handle tenant obj or tenant_id
-      case resource
-        when User then
-          tenant_id = resource.tenants.first.id
-        when Tenant then
-          tenant_id = resource.id
-        when Integer then
-          tenant_id = resource
-      else
-        raise ArgumentError, "invalid tenant object or id"
-      end # case
-
-      old_id = (Thread.current[:tenant_id].nil? ? '%' : Thread.current[:tenant_id])
-      Thread.current[:tenant_id] = tenant_id
-      logger.debug(" >>>>> [Tenant#change_tenant] new: #{tenant_id}\told:#{old_id}") unless logger.nil?
-    end
-
-    def self.current_tenant()
-      begin
-          tenant = Thread.current[:tenant_id].blank? ? nil : Tenant.find(Thread.current[:tenant_id])
-
-          return tenant
-      rescue ActiveRecord::RecordNotFound
-        return nil
-      end
-    end
-
-  def self.current_tenant_id()
-    return Thread.current[:tenant_id]
+  def must_have_one_category
+    errors.add(:base, 'You must select at least one Category') if categories.blank?
   end
 
+  private
 
-  def must_have_one_category
-    errors.add(:base, 'You must select at least one Catgeory') if categories.blank?
+  def clear_associated_users
+    users.clear
   end
 end
