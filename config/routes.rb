@@ -12,8 +12,9 @@ Rails.application.routes.draw do
     resources :statuses, only: [] do
       get 'products'
     end
-    resources :products, param: :product_id do
+    resources :products do
       get 'send_product_card', to: 'products#send_product_card'
+      resources :estimates
     end
     resources :product_statuses
     resources :user, only: [] do
@@ -36,8 +37,7 @@ Rails.application.routes.draw do
   devise_for :users, controllers: {
     registrations: 'registrations',
     confirmations: 'confirmations',
-    sessions: 'milia/sessions',
-    passwords: 'milia/passwords'
+    sessions: 'sessions'
   }
   match '/plan/edit' => 'tenants#edit', via: :get, as: :edit_plan
 

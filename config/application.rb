@@ -4,6 +4,7 @@ require File.expand_path('boot', __dir__)
 
 require 'rails/all'
 require 'logger'
+require 'sprockets/railtie'
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
@@ -31,7 +32,7 @@ module ServiceApp
     # config.i18n.default_locale = :de
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
-    config.active_record.raise_in_transactional_callbacks = true
+#     config.active_record.raise_in_transactional_callbacks = true
     config.logger = Logger.new('application.log', 0, 100 * 1024 * 1024)
   end
 end

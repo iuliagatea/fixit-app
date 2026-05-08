@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class ActsAsReviewableMigration < ActiveRecord::Migration
+class ActsAsReviewableMigration < ActiveRecord::Migration[7.2]
   def self.up
     create_table :reviews do |t|
       t.references  :reviewable,    polymorphic: true

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class AddRowsToCategory < ActiveRecord::Migration
+class AddRowsToCategory < ActiveRecord::Migration[7.2]
   def self.up
     Category.create(entity: 'tenant', name: 'Arhitectura / Design interior')
     Category.create(entity: 'tenant', name: 'Auto / Moto / Biciclete')

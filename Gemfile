@@ -3,51 +3,44 @@
 source 'https://rubygems.org'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.2.8'
+gem 'rails'
 # Use postgresql as the database for Active Record
 gem 'devise'
-gem 'devise-bootstrap-views'
-gem 'milia'
-gem 'pg', '~> 0.18.4'
-gem 'twitter-bootstrap-rails'
+gem 'pg'
 # Payment
 gem 'stripe'
-# Colorpicker
-gem 'colorpicker'
-# Datepicker
-gem 'bootstrap-datepicker-rails'
 # Charts
 gem 'chartkick'
 gem 'groupdate'
 # Pagination
-gem 'bootstrap-will_paginate', '0.0.10'
-gem 'will_paginate', '3.0.7'
+gem 'will_paginate'
 # Dynamic nested forms
 gem 'cocoon'
 # PDF generator
 gem 'wicked_pdf'
 gem 'wkhtmltopdf-binary'
 # Search and filter
-gem 'filterrific', '4.0.1'
+gem 'filterrific'
 gem 'pg_search'
 # ratings
-gem 'seems_rateable', '~> 2.0'
+gem 'seems_rateable'
+
+gem "puma"
 
 # Use SCSS for stylesheets
-gem 'sass-rails', '~> 5.0'
 # Use Uglifier as compressor for JavaScript assets
-gem 'uglifier', '>= 1.3.0'
+gem 'uglifier'
 # Use CoffeeScript for .coffee assets and views
-gem 'coffee-rails', '~> 4.1.0'
+gem 'coffee-rails'
 # See https://github.com/rails/execjs#readme for more supported runtimes
 # gem 'therubyracer', platforms: :ruby
 
 # Use jquery as the JavaScript library
 gem 'jquery-rails'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
-gem 'jbuilder', '~> 2.0'
+gem 'jbuilder'
 # bundle exec rake doc:rails generates the API under doc/api.
-gem 'sdoc', '~> 0.4.0', group: :doc
+gem 'sdoc', group: :doc
 gem 'factory_bot_rails'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
@@ -73,7 +66,7 @@ end
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
-  gem 'web-console', '~> 2.0'
+  gem 'web-console'
 
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
@@ -81,3 +74,13 @@ end
 
 gem 'activerecord-session_store', github: 'rails/activerecord-session_store'
 gem 'recaptcha', require: 'recaptcha/rails'
+
+gem "cssbundling-rails", "~> 1.4"
+
+gem "jsbundling-rails", "~> 1.3"
+
+gem "sprockets-rails", "~> 3.5"
+
+gem "sassc-rails", "~> 2.1"
+
+gem "twitter-bootstrap-rails", "~> 5.3"

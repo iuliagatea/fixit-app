@@ -7,11 +7,11 @@
 <div class="page-header">
   <h1><%=t '.title', :default => model_class.model_name.human.titleize %> 
                <span class="pdf-download no-black-hover">
-                 <%= link_to "<i class='fa fa-download'></i> ".html_safe, 
+                 <%= link_to "<i class='bi bi-download'></i>".html_safe,
                     tenant_product_path(@product, tenant_id: @product.tenant_id, format: :pdf),
                     title: 'Download product card' %>
                   <% if current_user.is_admin %>   
-                    <%= link_to "<i class='fa fa-send'></i> ".html_safe, 
+                    <%= link_to "<i class='bi bi-send-fill'></i>".html_safe,
                       tenant_product_send_product_card_path(@product, tenant_id: @product.tenant_id),
                       title: 'Send product card PDF to customer' %>
                   <% end %>

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ProductsController < ApplicationController
-  before_action :find_product, only: %i[show edit update destroy]
+  before_action :find_product, only: %i[show edit update destroy send_product_card]
   before_action :verify_tenant
   before_action :verify_user, except: %i[show index]
 
@@ -17,8 +17,8 @@ class ProductsController < ApplicationController
       format.html
       format.pdf do
         render pdf: "#{@product.code}_product_card",
-               template: 'products/product_pdf.html.erb',
-               layout: 'layouts/pdf.html.erb',
+               template: 'products/product_pdf',
+               formats: [:html],
                show_as_html: params[:debug].present?
       end
     end
@@ -26,6 +26,7 @@ class ProductsController < ApplicationController
 
   def new
     @product = Product.new
+    @product.estimates.build
     @statuses = Tenant.current_tenant.statuses
   end
 
@@ -69,7 +70,7 @@ class ProductsController < ApplicationController
     @user = @product.user
     @status = @product.current_status
     @statuses = Tenant.current_tenant.statuses
-    @estimates = @product.estimates
+    @product.estimates.build
   end
 
   def update
@@ -113,12 +114,16 @@ class ProductsController < ApplicationController
   private
 
   def find_product
-    @product = Product.find(params[:product_id])
+    @product = Product.find(params[:id])
   end
 
   def product_params
     params.require(:product).permit(:code, :name, :expected_completion_date, :tenant_id, :comments,
                                     estimates_attributes: %i[id name quantity price value _destroy])
+  end
+
+  def estimate_params
+    params.require(:estimates).permit(%i[id name quantity price value _destroy])
   end
 
   def member_params

@@ -11,8 +11,12 @@ class TenantsController < ApplicationController
   def show
     @categories = @tenant.categories
     @user_review = @tenant.reviews.where(user_id: current_user)
-    @reviews = paginate(@tenant.reviews.order(created_at: :desc), params[:page], 5)
-    @reviews.unshift(@user_review)
+    if @user_review.any?
+      @reviews = paginate(@tenant.reviews.order(created_at: :desc), params[:page], 5)
+      @reviews.unshift(@user_review)
+    else
+      @reviews = []
+    end
   end
 
   def update

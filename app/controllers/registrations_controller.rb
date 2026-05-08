@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class RegistrationsController < Milia::RegistrationsController
+class RegistrationsController < Devise::RegistrationsController
   skip_before_action :authenticate_tenant!, only: %i[new create cancel]
 
   # ------------------------------------------------------------------------------
@@ -17,21 +17,14 @@ class RegistrationsController < Milia::RegistrationsController
     # make any changes
     tenant_params = sign_up_params_tenant
     user_params   = sign_up_params_user.merge({ is_admin: true })
-    coupon_params = sign_up_params_coupon
 
     sign_out_session!
-    # next two lines prep signup view parameters
-    prep_signup_view(tenant_params, user_params, coupon_params)
 
-    # validate recaptcha first unless not enabled
-    if !::Milia.use_recaptcha || verify_recaptcha
       Tenant.transaction do
-        @tenant = Tenant.create_new_tenant(tenant_params, user_params, coupon_params)
+        @tenant = Tenant.create_new_tenant(tenant_params, user_params)
         logger.debug "Creating tenant: #{@tenant.attributes.inspect}"
         logger.debug "Tenant should be valid: #{@tenant.valid?}"
         if @tenant.errors.empty? # tenant created
-          logger.info 'Saving initial statuses'
-          @tenant.create_statuses
           if @tenant.plan == 'premium'
             @payment = Payment.new({ email: user_params['email'],
                                      token: params[:payment]['token'],
@@ -58,7 +51,7 @@ class RegistrationsController < Milia::RegistrationsController
         end
 
         if flash[:error].blank? || flash[:error].empty? # payment sucessful
-          initiate_tenant(@tenant) # first time stuff for new tenant
+#           initiate_tenant(@tenant) # first time stuff for new tenant
 
           devise_create(user_params) # devise resource(user) creation; sets resource
 
@@ -67,7 +60,7 @@ class RegistrationsController < Milia::RegistrationsController
             log_action('signup user/tenant success', resource)
             logger.debug "Signup user/tenant success #{resource}"
             # do any needed tenant initial setup
-            Tenant.tenant_signup(resource, @tenant, coupon_params)
+            Tenant.tenant_signup(resource, @tenant)
 
           else # user creation failed; force tenant rollback
             log_action('signup user create failed', resource)
@@ -81,15 +74,6 @@ class RegistrationsController < Milia::RegistrationsController
           render :new and return
         end
       end
-    else
-      flash[:error] = "Recaptcha codes didn't match; please try again"
-      # all validation errors are passed when the sign_up form is re-rendered
-      resource.valid?
-      @tenant.valid?
-      log_action('recaptcha failed', resource)
-      logger.error "Recaptcha failed #{resource}"
-      render :new and return
-    end
   end
 
   # ------------------------------------------------------------------------------
@@ -100,25 +84,13 @@ class RegistrationsController < Milia::RegistrationsController
   # ------------------------------------------------------------------------------
   # ------------------------------------------------------------------------------
   def sign_up_params_tenant
-    params.require(:tenant).permit(::Milia.whitelist_tenant_params)
+    params.require(:tenant).permit(:name, :plan, :description, :keywords)
   end
 
   # ------------------------------------------------------------------------------
   # ------------------------------------------------------------------------------
   def sign_up_params_user
     devise_parameter_sanitizer.sanitize(:sign_up)
-  end
-
-  # ------------------------------------------------------------------------------
-  # sign_up_params_coupon -- permit coupon parameter if used; else params
-  # ------------------------------------------------------------------------------
-  def sign_up_params_coupon
-    (if ::Milia.use_coupon
-       params.require(:coupon).permit(::Milia.whitelist_coupon_params)
-     else
-       params
-     end
-    )
   end
 
   # ------------------------------------------------------------------------------
@@ -137,11 +109,7 @@ class RegistrationsController < Milia::RegistrationsController
   def devise_create(user_params)
     build_resource(user_params)
 
-    # if we're using milia's invite_member helpers
-    if ::Milia.use_invite_member
-      # then flag for our confirmable that we won't need to set up a password
-      resource.skip_confirm_change_password = true
-    end
+    resource.skip_confirm_change_password = true
 
     resource.save
     yield resource if block_given?
@@ -164,7 +132,6 @@ class RegistrationsController < Milia::RegistrationsController
       log_action('devise: signup user failure', resource)
       logger.error "devise: signup user failure #{resource}"
       set_minimum_password_length
-      prep_signup_view(@tenant, resource, params[:coupon])
       respond_with resource
     end
   end
@@ -184,13 +151,6 @@ class RegistrationsController < Milia::RegistrationsController
   end
   # ------------------------------------------------------------------------------
   # ------------------------------------------------------------------------------
-
-  def log_action(action, resource = nil)
-    err_msg = (resource.nil? ? '' : resource.errors.full_messages.uniq.join(', '))
-    logger&.debug(
-      "MILIA >>>>> [register user/org] #{action} - #{err_msg}"
-    )
-  end
 
   # ------------------------------------------------------------------------------
   # ------------------------------------------------------------------------------

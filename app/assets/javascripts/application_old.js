@@ -12,16 +12,12 @@
 //
 //= require jquery
 //= require jquery_ujs
-//= require twitter/bootstrap
-//= require colorpicker
 //= require_tree
 //= require seems_rateable
 //= require_directory ./rateable
-//= require bootstrap-datepicker
 //= require Chart.bundle
 //= require chartkick
 //= require cocoon
-//= require filterrific/filterrific-jquery
 
 $(document).ready(function () {
   options = {
@@ -43,7 +39,7 @@ $(document).ready(function () {
   }
   new ColorPicker($("#status_color"), options);
 });
-$(document).ready(function() { 
+$(document).ready(function() {
   $(".member").hide();
   $(".new_review").hide();
   $(".customer_name").hide();

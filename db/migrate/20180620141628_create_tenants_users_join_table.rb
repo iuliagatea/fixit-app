@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreateTenantsUsersJoinTable < ActiveRecord::Migration
+class CreateTenantsUsersJoinTable < ActiveRecord::Migration[7.2]
   def change
     create_join_table :tenants, :users do |t|
       t.index %i[tenant_id user_id]

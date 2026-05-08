@@ -1,6 +1,6 @@
-<li class="col-md-4 pull-right user-name">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-    <%= ('<i class="fa fa-user"></i> ' + truncate( user_full_name, length: 25)).html_safe %>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+    <%= ('<i class="bi bi-person"></i> ' + truncate( user_full_name, length: 25)).html_safe %>
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu">
@@ -8,13 +8,13 @@
       <%= render 'common/admin_menu' %>
     <% end %>
     <li>
-      <%= link_to "<i class='fa fa-edit'></i> Change password".html_safe,
-                  edit_user_registration_path, title: 'Edit Profile',  class: 'navbar-link' %>
+      <%= link_to "<i class='bi bi-pencil'></i> Change password".html_safe,
+                  edit_user_registration_path, title: 'Edit Profile',  class: 'dropdown-item' %>
     </li>
-    <li role="separator" class="divider"></li>
-    <li class="logout">
-      <%= link_to( ("<i class='fa fa-unlock'></i> " + "Sign out").html_safe, destroy_user_session_path,
-                   title: 'Logout', :method => :delete) %>
+    <li><hr class="dropdown-divider"></li>
+    <li class="dropdown-item">
+      <%= button_to( ("<i class='bi bi-unlock'></i> Sign out").html_safe, destroy_user_session_path,
+                   title: 'Logout', method: :delete) %>
     </li>
   </ul>
 </li>

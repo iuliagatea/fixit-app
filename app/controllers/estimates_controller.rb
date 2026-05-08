@@ -2,6 +2,9 @@
 
 class EstimatesController < ApplicationController
   before_action :find_estimate, only: %i[show edit update destroy]
+  before_action :verify_tenant
+  before_action :verify_user
+  before_action :find_product
 
   def index
     @estimates = Estimate.all
@@ -50,6 +53,10 @@ class EstimatesController < ApplicationController
 
   def find_estimate
     @estimate = Estimate.find(params[:id])
+  end
+
+  def find_product
+    @product = Product.find(params[:product_id])
   end
 
   def estimate_params

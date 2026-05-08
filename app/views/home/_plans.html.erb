@@ -1,9 +1,8 @@
 <div class="row">
-    <div class="plans clearfix">
-      <div class="col-lg-3 col-lg-offset-3 plan">
+      <div class="col">
         <h2>Free</h2>
         <hr>
-        <div class="price pull-right">
+        <div class="price justify-content-end">
           Price: Free
         </div>
         <div class="features">
@@ -16,14 +15,14 @@
         </div>
         <p>
           <% if !current_user %>
-            <%= link_to 'Sign up for free', new_user_registration_path(plan: 'free'), class: 'btn btn-info sign-up' %>
+            <%= button_to 'Sign up for free', new_user_registration_path(plan: 'free'), class: 'btn btn-outline-secondary' %>
           <% end %>
         </p>
       </div>
-      <div class="col-lg-3 plan">
+      <div class="col">
         <h2>Premium</h2>
         <hr>
-        <div class="price pull-right">
+        <div class="price justify-content-end">
           Price: $10
         </div>
         <div class="features">
@@ -36,9 +35,8 @@
         </div>
         <p>
           <% if !current_user %>
-            <%= link_to 'Get started', new_user_registration_path(plan: 'premium'), class: 'btn btn-info sign-up' %>
+            <%= button_to 'Get started', new_user_registration_path(plan: 'premium'), class: 'btn btn-outline-secondary' %>
           <% end %>
         </p>
       </div>
-    </div>
   </div>

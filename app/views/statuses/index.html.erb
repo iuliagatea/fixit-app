@@ -3,31 +3,31 @@
   <h1><%=t '.title', :default => model_class.model_name.human.pluralize.titleize %></h1>
 </div>
 <%= will_paginate @statuses %>
-<table class="table table-status">
+<table class="table table-striped ">
   <thead>
     <tr>
-     <!-- <th><%= model_class.human_attribute_name(:name) %></th>
+     <th><%= model_class.human_attribute_name(:name) %></th>
       <th><%= 'Products count' %></th>
-      <th><%= 'Active' %></th>
-      <th><%= 'Send email' %></th>
-      <th></th>
-      -->
+      <th>Emails</th>
+      <th>Color</th>
+      <th>Active</th>
+      <th>Actions</th>
     </tr> 
   </thead>
   <tbody>
     <% @statuses.each do |status| %>
       <tr>
-        <td style="background-color: <%= status.color %>">
+        <td>
           <h4>
              <%= link_to status.name, edit_tenant_status_path(status_id: status.id) %>
           </h4>
         </td>
-        <td style="background-color: <%= status.color %>">
+        <td>
           <h5>
              <%= link_to pluralize(status.status_products(current_user).count, "product"), tenant_status_products_path(status_id: status.id) %>
           </h5>
         </td>
-        <td style="background-color: <%= status.color %>">
+        <td>
           <h5>
              <% if status.send_email %>
                Send emails
@@ -37,6 +37,8 @@
           </h5>
         </td>
         <td style="background-color: <%= status.color %>">
+        </td>
+        <td>
           <h5>
              <% if status.is_active %>
                Active
@@ -45,16 +47,16 @@
              <% end %>
           </h5>
         </td>
+        <td>
         <% if (status.status_products(current_user).count == 0 && status.can_be_deleted)  %>
-          <td>
-            <h4 class="status-delete">
-              <%= link_to "<i class='fa fa-remove'></i> ".html_safe,
+          <h5 class="status-delete">
+            <%= link_to "Delete".html_safe,
                         tenant_status_path(status, tenant_id: status.tenant_id),
                         :method => :delete,
                         :data => { :confirm => t('.confirm', :default => t("helpers.links.confirm", :default => 'Are you sure?')) } %>
-            </h4>
-          </td>
+          </h5>
         <% end %>
+        </td>
       </tr>
     <% end %>
   </tbody>

@@ -2,11 +2,6 @@
   <h1>
     <%= t.name %> 
   </h1> 
-  <% if t.id == current_user.tenants.first %>
-    <%= rating_for t, disabled: true %>
-  <% else %>
-    <%= rating_for t, html_options: {disabled: "false"} %>
-  <% end %>
   <br />
   <% if t.categories.any? %>
     <p><%= render t.categories %></p>
@@ -15,7 +10,7 @@
 <p><%= t.description %></p>
 <% if t.id != current_user.tenants.first %>
   <h4 class="no-black-hover">
-    <%= link_to "<i class='fa fa-envelope'></i> Contact".html_safe, 
+    <%= link_to "<i class='bi bi-envelope'></i> Contact".html_safe,
                   tenant_contact_path(t),
                   title: 'Contact' %> 
   </h4> 

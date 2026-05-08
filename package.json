@@ -1,0 +1,29 @@
+{
+  "name": "app",
+  "private": "true",
+  "scripts": {
+    "build:css": "yarn build:css:compile && yarn build:css:prefix",
+    "build:css:compile": "sass ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules",
+    "build:css:prefix": "postcss ./app/assets/builds/application.css --use=autoprefixer --output=./app/assets/builds/application.css",
+    "watch:css": "nodemon --watch ./app/assets/stylesheets/ --ext scss --exec \"yarn build:css\"",
+    "build": "esbuild app/javascript/*.* --bundle --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets"
+  },
+  "browserslist": [
+    "defaults"
+  ],
+  "dependencies": {
+    "@nathanvda/cocoon": "^1.2.14",
+    "@popperjs/core": "^2.11.8",
+    "autoprefixer": "^10.5.0",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
+    "node-modules": "^1.0.1",
+    "nodemon": "^3.1.14",
+    "postcss": "^8.5.14",
+    "postcss-cli": "^11.0.1",
+    "sass": "^1.99.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreateEstimates < ActiveRecord::Migration
+class CreateEstimates < ActiveRecord::Migration[7.2]
   def change
     create_table :estimates do |t|
       t.string :name

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreateReviewsTable < ActiveRecord::Migration
+class CreateReviewsTable < ActiveRecord::Migration[7.2]
   def change
     create_table :reviews do |t|
       t.references :tenant, index: true, foreign_key: true

@@ -1,18 +1,30 @@
-<%- model_class = Product -%>
-<% if Rails.env.development? %>
-  <%= stylesheet_link_tag 'application' %>
-<% else %>
-  <%= wicked_pdf_stylesheet_link_tag 'application' %>
-<% end %>
-<div class="page-header">
-  <h1><%=t '.title', :default => model_class.model_name.human.titleize %> Card</h1>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+<title>PDF</title>
+  <%= wicked_pdf_stylesheet_link_tag "bootstrap" -%>
+</head>
+<body>
 
-<%= render 'show' %>
-<hr />
-<footer class="footer">
-    <div class="container no-black-hover">
-      <span class="text-muted">FixIT &copy; <%= Date.today.year %></span>
+  <div class='container'>
+    <%- model_class = Product -%>
+    <% if Rails.env.development? %>
+      <%= stylesheet_link_tag 'application' %>
+    <% else %>
+      <%= wicked_pdf_stylesheet_link_tag 'application' %>
+    <% end %>
+    <div class="page-header">
+      <h1><%=t '.title', :default => model_class.model_name.human.titleize %> Card</h1>
     </div>
-</footer>
 
+    <%= render 'show' %>
+    <hr />
+    <footer class="footer">
+        <div class="container no-black-hover">
+          <span class="text-muted">FixIT &copy; <%= Date.today.year %></span>
+        </div>
+    </footer>
+  </div>
+
+</body>
+</html>

@@ -15,105 +15,77 @@
     </div>
   <% end %>
 
-  <div class="form-group">
-    <%= f.label :code, :class => 'control-label col-lg-2' %>
-    <div class="col-lg-10">
-      <%= f.text_field :code, :class => 'form-control' %>
-    </div>
+  <div class="input-group mb-3">
+    <span class="input-group-text col-lg-2">Code</span>
+    <%= f.text_field :code, :class => 'form-control', :placeholder => "Code" %>
     <%=f.error_span(:code) %>
   </div>
-  <div class="form-group">
-    <%= f.label :name, :class => 'control-label col-lg-2' %>
-    <div class="col-lg-10">
-      <%= f.text_field :name, :class => 'form-control' %>
-    </div>
+  <div class="input-group mb-3">
+    <span class="input-group-text col-lg-2">Name</span>
+    <%= f.text_field :name, :class => 'form-control', :placeholder => "Name" %>
     <%=f.error_span(:name) %>
   </div>
-  <div class="form-group">
-    <%= f.label :expected_completion_date, :class => 'control-label col-lg-2' %>
-    <div class="col-lg-10">
-      <%= f.text_field :expected_completion_date, :class => 'form-control datepicker' %>
-    </div>
+  <div class="input-group mb-3">
+    <span class="input-group-text col-lg-2">Expected completion date</span>
+    <%= f.text_field :expected_completion_date, :class => 'form-control' %>
     <%=f.error_span(:expected_completion_date) %>
   </div>
-  <div class="form-group">
-    <%= f.label :comments, :class => 'control-label col-lg-2' %>
-    <div class="col-lg-10">
-      <%= f.text_area :comments, :class => 'form-control' %>
-    </div>
+  <div class="input-group mb-3">
+     <span class="input-group-text col-lg-2">Comments</span>
+     <%= f.text_area :comments, :class => 'form-control' %>
     <%=f.error_span(:name) %>
   </div>
   <%= fields_for(:status) do |s| %>
-    <div class="form-group">
-      <%= s.label :status, :class => 'control-label col-lg-2' %>
-      <div class="col-lg-10">
-        <%= s.collection_select :id, @statuses, :id, :name, {}, {class: 'form-control'} %>
-      </div>
+    <div class="input-group mb-3">
+       <span class="input-group-text col-lg-2">Status</span>
+       <%= s.collection_select :id, @statuses, :id, :name, {}, {class: 'form-control'} %>
     </div>
   <% end %>
   <%= f.hidden_field :tenant_id, value: params[:tenant_id], :class => 'form-control' %>
   <%= fields_for(:user) do |u| %>
-    <div class="form-group">
+    <div class="input-group mb-3">
       <hr />
-      <%= u.label :customer_email, :class => 'control-label col-lg-2' %>
-      <div class="col-lg-10">
-        <% if @product.new_record? %>
-          <%= u.text_field :email, :class => 'form-control' %>
-        <% else %>
-          <%= u.text_field :email, :class => 'form-control', :disabled => true %>
-          <%= u.hidden_field :email, :class => 'form-control' %>
-        <% end %>
-      </div>
+      <span class="input-group-text col-lg-2">Customer email</span>
+      <% if @product.new_record? %>
+        <%= u.text_field :email, :class => 'form-control' %>
+      <% else %>
+        <%= u.text_field :email, :class => 'form-control', :disabled => true %>
+        <%= u.hidden_field :email, :class => 'form-control' %>
+      <% end %>
     </div>
-    <div class="form-group customer_name">
-      <label class='control-label col-lg-2'>Customer name</label> 
-      <div class="col-lg-10">
-        <div class="form-control" id="customer_name"></div>
-      </div>
+    <div class="input-group mb-3 customer_name">
+      <span class="input-group-text col-lg-2">Customer name</span>
+      <div class="form-control" id="customer_name"></div>
     </div>
   <% end %>
   <%= fields_for(:member) do |m| %>
-    <div class="form-group member">
       <h5><div class="group-title">Add new customer</div></h5>
-      <hr />
-      <%= m.label :first_name, :class => 'control-label col-lg-2' %>
-      <div class="col-lg-4">
-        <%= m.text_field :first_name, :class => 'form-control' %>
-      </div>
-       <%= m.label :last_name, :class => 'control-label col-lg-2' %>
-      <div class="col-lg-4">
-        <%= m.text_field :last_name, :class => 'form-control' %>
-      </div>
+    <div class="input-group mb-3 member">
+      <span class="input-group-text col-lg-2">First name</span>
+      <%= m.text_field :first_name, :class => 'form-control' %>
+      <span class="input-group-text col-lg-2">Last name</span>
+      <%= m.text_field :last_name, :class => 'form-control' %>
     </div>
   <% end %>
   <div id='estimates'>
-    <div class="form-group">
-      <h5>
-        <div class="group-title col-lg-2">Estimates </div>
-          <div class="group-title col-lg-8">
-          <% if !@product.new_record? && @estimates.size > 0 %>
-            Total: <%= @product.estimated_value %>
-          <% else %>
-            
-          <% end %>
-        </div>
-      </h5>
+  <h5>
+    <div class="group-title col-lg-4">Estimates
+      <% if !@product.new_record? && @product.estimated_value > 0 %>
+          - Total: <%= @product.estimated_value %>
+       <% else %><% end %>
     </div>
-    <hr />
+  </h5>
+  <div class="input-group mb-3"></div>
+
     <%= f.fields_for :estimates do |estimate| %>
       <%= render 'estimate_fields', :f => estimate %>
     <% end %>
-    <div class='links'>
-      <%= link_to_add_association "<i class='fa fa-plus'></i> ".html_safe, f, :estimates %>
-    </div>
   </div>
    
-  <div class="form-group">
-    <div class="col-lg-offset-2 col-lg-10">
+  <div class="input-group mb-3">
       <%= f.submit nil, :class => 'btn btn-primary' %>
       <%= link_to t('.cancel', :default => t("helpers.links.cancel")),
                 tenant_products_path, :class => 'btn btn-default' %>
-    </div>
   </div>
 
 <% end %>

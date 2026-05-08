@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreateMembers < ActiveRecord::Migration
+class CreateMembers < ActiveRecord::Migration[7.2]
   def change
     create_table :members do |t|
       t.references :tenant, index: true, foreign_key: true

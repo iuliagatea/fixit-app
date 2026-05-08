@@ -1,8 +1,5 @@
-<script language="JavaScript">
-  Stripe.setPublishableKey("<%= ENV['STRIPE_TEST_PUBLISHABLE_KEY'] %>");
-</script>
+<h1><%= t('.sign_up') %></h1>
 
-<%= bootstrap_devise_error_messages! %>
 <div class="panel panel-default devise-bs">
   <div class="panel-heading">
     <h4><%= t('.sign_up', default: 'Sign up') %></h4>
@@ -53,8 +50,7 @@
                             "data-stripe" => "exp-month", 
                             class: "form-control", 
                             required: true %>
-              </div>
-              <div class="col-md-3">
+
                 <%= p.select :card_expires_year, options_for_select(Payment.year_options.push),
                             { include_blank: 'Year' }, 
                             class: "form-control", 
