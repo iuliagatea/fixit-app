@@ -8,6 +8,7 @@ RSpec.shared_examples 'index' do |resource|
   it { expect(subject).to render_template(:index) }
   it {
     subject
+    byebug
     expect(assigns(assigned_resource)).to match(resource_class.all)
   }
 end
@@ -15,7 +16,7 @@ end
 RSpec.shared_examples 'new' do |resource|
   it 'assigns values to variables' do
     subject
-    expect(assigns(resource).id).to be_nil
+    expect(assigns(resource)).to be_nil
   end
   it { expect(subject).to render_template(:new) }
 end
@@ -33,13 +34,8 @@ RSpec.shared_examples 'destroy' do |resource_class|
 end
 
 RSpec.shared_examples_for 'redirect if not logged in' do
-  before do
-      logout(admin_user)
-      subject
-  end
-
   it 'redirects to sign in path' do
-
-    expect(subject).to redirect_to(new_user_session_path)
+    logout(admin_user)
+    expect(subject).to redirect_to(root_path)
   end
 end

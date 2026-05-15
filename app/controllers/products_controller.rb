@@ -6,7 +6,7 @@ class ProductsController < ApplicationController
   before_action :verify_user, except: %i[show index]
 
   def index
-    @products = paginate(products, params[:page])
+    @products = products.includes(:statuses, :estimates).paginate(page: params[:page])
   end
 
   def show
@@ -55,14 +55,14 @@ class ProductsController < ApplicationController
     if status_id.present?
       @product.statuses << Status.find(status_id)
     else
-      flash[:error] = "Status is required"
+      flash[:error] = 'Status is required'
       render :new and return
     end
 
     respond_to do |format|
       if @product.save
         UserNotifier.send_status_change_email(@user, @product,
-                                              "#{current_tenant.name} - New product #{@product.name}").deliver_now
+                                              "#{current_tenant.name} - New product #{@product.name}").deliver_later
         logger.info 'The product was saved and now the user is going to be redirected...'
         format.html { redirect_to tenant_products_url, notice: 'Product was successfully created.' }
       else
@@ -91,7 +91,7 @@ class ProductsController < ApplicationController
         if status.send_email && (current_status != status)
           logger.info 'Send email to customer for status change'
           UserNotifier.send_status_change_email(user, @product,
-                                                "#{current_tenant.name} - Status updated for product #{@product.name}").deliver_now
+                                                "#{current_tenant.name} - Status updated for product #{@product.name}").deliver_later
         end
         format.html { redirect_to tenant_products_url, notice: 'Product was successfully updated.' }
       else
@@ -115,7 +115,8 @@ class ProductsController < ApplicationController
     logger.debug "Send product card via email #{@product.attributes.inspect}"
     UserNotifier.send_product_card_email_pdf(@product.user, @product,
                                              "#{current_tenant.name} - Product card - #{@product.name}").deliver_later
-    redirect_to tenant_product_path(@product.id, tenant_id: @product.tenant_id), notice: 'Product card sent successfully.'
+    redirect_to tenant_product_path(@product.id, tenant_id: @product.tenant_id),
+                notice: 'Product card sent successfully.'
   end
 
   private

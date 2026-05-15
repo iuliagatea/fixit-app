@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class ConfirmationsController < Devise::ConfirmationsController
-    before_action :set_confirmable, only: [:show, :update]
+  before_action :set_confirmable, only: %i[show update]
+  skip_before_action :authenticate_tenant!, only: %i[show]
 
   def update
     if @confirmable.attempt_set_password(user_params)
@@ -62,16 +63,16 @@ class ConfirmationsController < Devise::ConfirmationsController
   private
 
   # Sign in a user
-        def sign_in_tenanted(resource)
-          sign_in(resource)
-          Tenant.set_current_tenant(resource)
-        end
+  def sign_in_tenanted(resource)
+    sign_in(resource)
+    Tenant.set_current_tenant(resource)
+  end
 
   # Sign in a user and tries to redirect
-        def sign_in_tenanted_and_redirect(resource)
-          sign_in_tenanted(resource)
-          redirect_to after_sign_in_path_for(resource)
-        end
+  def sign_in_tenanted_and_redirect(resource)
+    sign_in_tenanted(resource)
+    redirect_to after_sign_in_path_for(resource)
+  end
 
   def set_confirmable
     @confirmable = User.find_or_initialize_with_error_by(:confirmation_token,

@@ -10,7 +10,7 @@ RSpec.describe ReviewsController do
   describe 'POST #create' do
     let(:create_attributes) { attributes_for(:review) }
     subject { post :create, params: { review: create_attributes, tenant_id: tenant.id, user_id: customer.id } }
-    include_examples "create", Review
+    include_examples 'create', Review
   end
 
   describe 'PATCH #update' do
@@ -29,6 +29,6 @@ RSpec.describe ReviewsController do
   describe 'Delete #destroy' do
     subject { delete :destroy, params: { review_id: review.id, tenant_id: tenant.id } }
     before { review }
-    include_examples "destroy", Review
+    include_examples 'destroy', Review
   end
 end

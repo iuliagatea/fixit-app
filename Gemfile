@@ -25,7 +25,7 @@ gem 'pg_search'
 # ratings
 gem 'seems_rateable'
 
-gem "puma"
+gem 'puma'
 
 # Use SCSS for stylesheets
 # Use Uglifier as compressor for JavaScript assets
@@ -40,8 +40,8 @@ gem 'jquery-rails'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'jbuilder'
 # bundle exec rake doc:rails generates the API under doc/api.
-gem 'sdoc', group: :doc
 gem 'factory_bot_rails'
+gem 'sdoc', group: :doc
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
@@ -56,14 +56,14 @@ end
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
+  gem 'faker', '~> 2.2', '>= 2.2.0'
+  gem 'rails-controller-testing'
   gem 'rspec-rails'
   gem 'rubocop'
+  gem 'rubocop-faker', require: false
   gem 'rubocop-rails', require: false
   gem 'rubocop-rspec', require: false
-  gem 'rubocop-faker', require: false
-  gem 'faker', '~> 2.2', '>= 2.2.0'
   gem 'shoulda-matchers'
-  gem "rails-controller-testing"
 end
 
 group :development do
@@ -77,12 +77,12 @@ end
 gem 'activerecord-session_store', github: 'rails/activerecord-session_store'
 gem 'recaptcha', require: 'recaptcha/rails'
 
-gem "cssbundling-rails", "~> 1.4"
+gem 'cssbundling-rails', '~> 1.4'
 
-gem "jsbundling-rails", "~> 1.3"
+gem 'jsbundling-rails', '~> 1.3'
 
-gem "sprockets-rails", "~> 3.5"
+gem 'sprockets-rails', '~> 3.5'
 
-gem "sassc-rails", "~> 2.1"
+gem 'sassc-rails', '~> 2.1'
 
-gem "twitter-bootstrap-rails", "~> 5.3"
+gem 'twitter-bootstrap-rails', '~> 5.3'

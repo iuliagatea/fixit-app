@@ -20,60 +20,57 @@ class RegistrationsController < Devise::RegistrationsController
 
     sign_out_session!
 
-      Tenant.transaction do
-        @tenant = Tenant.create_new_tenant(tenant_params, user_params)
-        logger.debug "Creating tenant: #{@tenant.attributes.inspect}"
-        logger.debug "Tenant should be valid: #{@tenant.valid?}"
-        if @tenant.errors.empty? # tenant created
-          if @tenant.plan == 'premium'
-            @payment = Payment.new({ email: user_params['email'],
-                                     token: params[:payment]['token'],
-                                     tenant: @tenant })
-            flash[:error] = 'Please, check registration errors' unless @payment.valid?
-            logger.error "Error saving payment: #{@payment.errors}" unless @payment.valid?
-            begin
-              @payment.process_payment
-              @payment.save
-              logger.debug "Tenant created successfully: #{@tenant.attributes.inspect}"
-            rescue Exception => e
-              flash[:error] = e.message
-              @tenant.destroy
-              log_action('Payment failed')
-              logger.error "Error processing payment: #{e.message}"
-              render :new and return
-            end
+    Tenant.transaction do
+      byebug
+      @tenant = TenantCreationService.call(tenant_params, user_params)
+      logger.debug "Creating tenant: #{@tenant.attributes.inspect}"
+      logger.debug "Tenant should be valid: #{@tenant.valid?}"
+      if @tenant.errors.empty? # tenant created
+        if @tenant.plan == 'premium'
+          @payment = Payment.new({ email: user_params['email'],
+                                   token: params[:payment]['token'],
+                                   tenant: @tenant })
+          flash[:error] = 'Please, check registration errors' unless @payment.valid?
+          logger.error "Error saving payment: #{@payment.errors}" unless @payment.valid?
+          begin
+            @payment.process_payment
+            @payment.save
+            logger.debug "Tenant created successfully: #{@tenant.attributes.inspect}"
+          rescue Exception => e
+            flash[:error] = e.message
+            @tenant.destroy
+            log_action('Payment failed')
+            logger.error "Error processing payment: #{e.message}"
+            render :new and return
           end
-        else
-          resource.valid?
-          logger.error "Tenant create failed: #{@tenant.errors}"
-          log_action('tenant create failed', @tenant)
-          render :new and return
         end
-
-        if flash[:error].blank? || flash[:error].empty? # payment sucessful
-#           initiate_tenant(@tenant) # first time stuff for new tenant
-
-          devise_create(user_params) # devise resource(user) creation; sets resource
-
-          if resource.errors.empty? #  SUCCESS!
-
-            log_action('signup user/tenant success', resource)
-            logger.debug "Signup user/tenant success #{resource}"
-            # do any needed tenant initial setup
-            Tenant.tenant_signup(resource, @tenant)
-
-          else # user creation failed; force tenant rollback
-            log_action('signup user create failed', resource)
-            logger.error "Signup user create failed #{resource}"
-            raise ActiveRecord::Rollback # force the tenant transaction to be rolled back
-          end
-        else
-          resource.valid?
-          log_action('Payment perocessing failed', @tenant)
-          logger.error "Payment perocessing failed #{@tenant}"
-          render :new and return
-        end
+      else
+        resource.valid?
+        logger.error "Tenant create failed: #{@tenant.errors}"
+        log_action('tenant create failed', @tenant)
+        render :new and return
       end
+
+      if flash[:error].blank? || flash[:error].empty? # payment sucessful
+        devise_create(user_params) # devise resource(user) creation; sets resource
+
+        if resource.errors.empty? #  SUCCESS!
+          log_action('signup user/tenant success', resource)
+          logger.debug "Signup user/tenant success #{resource}"
+          # do any needed tenant initial setup
+          Member.create_org_admin(resource)
+        else # user creation failed; force tenant rollback
+          log_action('signup user create failed', resource)
+          logger.error "Signup user create failed #{resource}"
+          raise ActiveRecord::Rollback # force the tenant transaction to be rolled back
+        end
+      else
+        resource.valid?
+        log_action('Payment perocessing failed', @tenant)
+        logger.error "Payment perocessing failed #{@tenant}"
+        render :new and return
+      end
+    end
   end
 
   # ------------------------------------------------------------------------------

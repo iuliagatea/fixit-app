@@ -15,7 +15,7 @@ Rails.application.configure do
     port: '587',
     authentication: :plain,
     user_name: 'do-not-reply@service-app.com',
-    password: ENV['SMTP_ENTRY'],
+    password: ENV.fetch('SMTP_ENTRY', nil),
     enable_starttls_auto: true,
     openssl_verify_mode: 'none'
   }

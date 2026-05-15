@@ -19,13 +19,13 @@ RSpec.describe StatusesController do
 
   describe 'GET #new' do
     subject { get :new, params: { tenant_id: tenant.id } }
-    include_examples "new", :status
+    include_examples 'new', :status
   end
 
   describe 'POST #create' do
     let(:create_attributes) { attributes_for(:status) }
     subject { post :create, params: { status: create_attributes, tenant_id: tenant.id } }
-    include_examples "create", Status
+    include_examples 'create', Status
   end
 
   describe 'GET #show' do
@@ -67,6 +67,6 @@ RSpec.describe StatusesController do
   describe 'Delete #destroy' do
     subject { delete :destroy, params: { id: status.id, tenant_id: tenant.id } }
     before { status }
-    include_examples "destroy", Status
+    include_examples 'destroy', Status
   end
 end

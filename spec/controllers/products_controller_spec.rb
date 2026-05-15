@@ -7,7 +7,6 @@ RSpec.describe ProductsController do
 
   describe 'GET #index' do
     subject { get :index, params: { tenant_id: tenant.id } }
-#     it_should_behave_like 'redirect if not logged in'
     context 'logged in' do
       before { products }
       it 'renders a list of categories' do
@@ -16,6 +15,7 @@ RSpec.describe ProductsController do
       end
       it { expect(subject).to render_template(:index) }
     end
+    it_should_behave_like 'redirect if not logged in'
   end
 
   describe 'GET #show' do
@@ -34,7 +34,7 @@ RSpec.describe ProductsController do
     subject { get :new, params: { tenant_id: tenant.id } }
     it_should_behave_like 'redirect if not logged in'
     context 'logged in' do
-      include_examples "new", 'product'
+      include_examples 'new', 'product'
     end
   end
 
@@ -42,7 +42,7 @@ RSpec.describe ProductsController do
     let(:create_attributes) { attributes_for(:product, tenant_id: tenant.id) }
     subject do
       post :create, params: { tenant_id: tenant.id, product: create_attributes, user: { email: customer.email },
-                    status: { id: tenant.statuses.first } }
+                              status: { id: tenant.statuses.first } }
     end
     it_should_behave_like 'redirect if not logged in'
     context 'logged in' do
@@ -51,7 +51,7 @@ RSpec.describe ProductsController do
         let(:member_attributes) { attributes_for(:member) }
         subject do
           post :create, params: { tenant_id: tenant.id, product: create_attributes, user: customer_attributes, member: member_attributes,
-                        status: { id: tenant.statuses.first } }
+                                  status: { id: tenant.statuses.first } }
         end
         it 'creates a new customer' do
           expect { subject }.to change(User, :count).by(1)
@@ -118,7 +118,7 @@ RSpec.describe ProductsController do
     end
     subject do
       patch :update, params: { tenant_id: tenant.id, id: product.id, product: update_attributes,
-                     user: { email: customer.email }, status: { id: new_status } }
+                               user: { email: customer.email }, status: { id: new_status } }
     end
     it_should_behave_like 'redirect if not logged in'
     context 'logged in' do

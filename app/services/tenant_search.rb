@@ -6,12 +6,12 @@ class TenantSearch
   end
 
   def search
-    Tenant.search_any_word(search_params).sort_by { |t| [ t.name] }
+    Tenant.search_any_word(search_params).sort_by { |t| [t.name] }
   end
 
   private
 
   def search_params
-    [@params[:query], @params[:categories]].reject(&:nil?).reject(&:empty?).join(' ')
+    [@params[:query], @params[:categories]].compact.reject(&:empty?).join(' ')
   end
 end

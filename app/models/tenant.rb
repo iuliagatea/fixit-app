@@ -3,6 +3,7 @@
 class Tenant < ActiveRecord::Base
   include PgSearch
   include Tenantable
+
   DEFAULT_STATUSES = [{ name: 'Received', color: '#428bca' },
                       { name: 'In progress', color: '#d9534f' },
                       { name: 'Completed', color: '#3c763d' },
@@ -32,12 +33,6 @@ class Tenant < ActiveRecord::Base
 
   before_destroy :clear_associated_users
 
-  default_scope { where("#{table_name}.tenant_id IS NULL") }
-
-  def self.create_new_tenant(params, _user_params)
-    TenantCreate.call(params)
-  end
-
   def create_statuses
     statuses.insert_all(DEFAULT_STATUSES.map { |s| s.merge(tenant_id: id, can_be_deleted: false) })
   end
@@ -49,19 +44,6 @@ class Tenant < ActiveRecord::Base
   # ------------------------------------------------------------------------
   def self.new_signups_not_permitted?
     false
-  end
-
-  # ------------------------------------------------------------------------
-  # tenant_signup -- setup a new tenant in the system
-  # CALLBACK from devise RegistrationsController
-  # AFTER user creation and current_tenant established
-  # args:
-  #   user  -- new user  obj
-  #   tenant -- new tenant obj
-  #   other  -- any other parameter string from initial request
-  # ------------------------------------------------------------------------
-  def self.tenant_signup(user, _tenant, _other = nil)
-    Member.create_org_admin(user)
   end
 
   def must_have_one_category

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 include ControllerHelper
 
 RSpec.shared_context 'initialize' do

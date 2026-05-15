@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :tenant do
     name { Faker::Name.name }
@@ -10,8 +12,6 @@ FactoryBot.define do
     description { Faker::Lorem.sentence }
     categories { create_list(:category, 2) }
 
-    after(:create) do |tenant|
-      tenant.create_statuses
-    end
+    after(:create, &:create_statuses)
   end
 end

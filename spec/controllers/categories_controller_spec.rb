@@ -15,18 +15,18 @@ RSpec.describe CategoriesController do
 
   describe 'GET #index' do
     subject { get :index }
-    include_examples "index", 'category'
+    include_examples 'index', 'category'
   end
 
   describe 'GET #new' do
     subject { get :new }
-    include_examples "new", :category
+    include_examples 'new', :category
   end
 
   describe 'POST #create' do
     let(:create_attributes) { attributes_for(:category) }
     subject { post :create, params: { category: create_attributes } }
-    include_examples "create", Category
+    include_examples 'create', Category
   end
 
   describe 'GET #show' do
@@ -68,6 +68,6 @@ RSpec.describe CategoriesController do
   describe 'Delete #destroy' do
     subject { delete :destroy, params: { id: category.id } }
     before { category }
-    include_examples "destroy", Category
+    include_examples 'destroy', Category
   end
 end

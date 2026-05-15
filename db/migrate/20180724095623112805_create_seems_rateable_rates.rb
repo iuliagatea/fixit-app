@@ -11,8 +11,8 @@ class CreateSeemsRateableRates < ActiveRecord::Migration[7.2]
       t.timestamps
     end
 
-#     add_index :seems_rateable_rates, :rater_id
-#     add_index :seems_rateable_rates, %i[rateable_id rateable_type]
-#     add_index :seems_rateable_rates, :dimension
+    #     add_index :seems_rateable_rates, :rater_id
+    #     add_index :seems_rateable_rates, %i[rateable_id rateable_type]
+    #     add_index :seems_rateable_rates, :dimension
   end
 end

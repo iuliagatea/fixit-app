@@ -6,6 +6,8 @@ class ApplicationController < ActionController::Base
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
   before_action :authenticate_tenant!
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found
+  rescue_from StandardError, with: :internal_error
 
   def products
     @products ||= current_user.is_admin ? current_tenant.products : current_user.products
@@ -47,44 +49,37 @@ class ApplicationController < ActionController::Base
     )
   end
 
-# ------------------------------------------------------------------------------
-# authenticate_tenant! -- authorization & tenant setup
-# -- authenticates user
-# -- sets current tenant
-# ------------------------------------------------------------------------------
+  # ------------------------------------------------------------------------------
+  # authenticate_tenant! -- authorization & tenant setup
+  # -- authenticates user
+  # -- sets current tenant
   def authenticate_tenant!
-    unless current_user.present? || authenticate_user!(force: true)
-      email = params.dig(:user, :email) || "<email missing>"
-      flash[:error] = "Cannot sign in as #{email}; check email/password"
-      logger.info(">>>>> [failed auth user]") unless logger.nil?
-      redirect_to new_user_session_path and return
-    end
-
-    # user_signed_in? == true also means current_user returns valid user
-    unless user_signed_in?
-      flash[:error] = "Invalid authentication"
-      redirect_to new_user_session_path and return
-    end
-
+    authenticate_user! unless user_signed_in?
     Tenant.set_current_tenant(current_user)
 
-    # successful tenant authentication; do any callback
-    if respond_to?(:callback_authenticate_tenant, true)
-      logger.debug(">>>>> [auth_tenant callback]")
-      send(:callback_authenticate_tenant)
-    end
+    return if user_signed_in? && !current_tenant.nil? && current_user.tenants.exists?(id: current_tenant.id)
 
-    true
+    not_authorized_redirect
   end
 
   def not_authorized_redirect
-    redirect_to :root,
-                flash: { error: 'You are not authorized to do this action' }
+    flash[:alert] = 'You are not authorized to perform this action.'
+
+    redirect_to(request.referrer || root_path)
   end
 
   private
 
   def current_tenant
     Tenant.current_tenant
+  end
+
+  def not_found
+    render json: { error: 'Not found' }, status: :not_found
+  end
+
+  def internal_error(exception)
+    Rails.logger.error(exception.message)
+    render json: { error: 'Internal server error' }, status: :internal_server_error
   end
 end

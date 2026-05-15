@@ -13,11 +13,7 @@ class TenantsController < ApplicationController
   def show
     @categories = @tenant.categories
     @user_review = @tenant.reviews.where(user_id: current_user)
-    if @user_review.any?
-      @reviews = paginate(@tenant.reviews.order(created_at: :desc), params[:page], 5)
-    else
-      @reviews = []
-    end
+    @reviews = @user_review.any? ? paginate(@tenant.reviews.order(created_at: :desc), params[:page], 5) : []
   end
 
   def update
@@ -51,7 +47,7 @@ class TenantsController < ApplicationController
   def contact; end
 
   def send_email
-    UserNotifier.send_email(params).deliver_now
+    UserNotifier.send_email(params).deliver_later
     redirect_to root_path, notice: 'Email was sent successfully.'
   end
 
