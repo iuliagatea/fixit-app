@@ -6,7 +6,7 @@ class StatusesController < ApplicationController
   before_action :verify_user, except: [:products]
 
   def index
-    @statuses = paginate(Tenant.current_tenant.statuses, params[:page])
+    @statuses = paginate(current_tenant.statuses, params[:page])
   end
 
   def show; end

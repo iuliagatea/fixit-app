@@ -6,7 +6,7 @@ class TenantSearch
   end
 
   def search
-    Tenant.search_any_word(search_params).sort_by { |t| [t.rating.stars, t.name] }
+    Tenant.search_any_word(search_params).sort_by { |t| [ t.name] }
   end
 
   private

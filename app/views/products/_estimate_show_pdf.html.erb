@@ -1,0 +1,27 @@
+<% if @product.estimates.count > 0 %>
+<h4>Estimate</h4>
+<table class="table">
+  <tbody>
+    <thead>
+      <th>Name</th>
+      <th>Quantity</th>
+      <th>Price</th>
+      <th>Value</th>
+    </thead>
+    <% @product.estimates.each do |estimate| %>
+      <tr>
+        <td><%= estimate.name %></td>
+        <td><%= estimate.quantity %></td>
+        <td><%= estimate.price %></td>
+        <td><%= estimate.quantity*estimate.price %></td>
+      </tr>
+    <% end %>
+    <tr>
+      <th></th>
+      <th></th>
+      <th>Total: </th>
+      <th><%= @product.estimated_value %></th>
+    </tr>
+  </tbody>
+</table>
+<% end %>

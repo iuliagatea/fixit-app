@@ -11,8 +11,6 @@ class ProductsController < ApplicationController
 
   def show
     logger.debug "Showing products of tenant with id #{params[:tenant_id]} for user #{current_user.email}"
-    @product_statuses = @product.product_statuses
-    @estimates = @product.estimates
     respond_to do |format|
       format.html
       format.pdf do
@@ -27,7 +25,7 @@ class ProductsController < ApplicationController
   def new
     @product = Product.new
     @product.estimates.build
-    @statuses = Tenant.current_tenant.statuses
+    @statuses = current_tenant.statuses
   end
 
   def create
@@ -49,7 +47,7 @@ class ProductsController < ApplicationController
         render :new
       end
     else
-      @user.tenants << Tenant.current_tenant unless @user.tenants.include?(Tenant.current_tenant)
+      @user.tenants << current_tenant unless @user.tenants.include?(current_tenant)
     end
     @product.user = @user
 
@@ -64,7 +62,7 @@ class ProductsController < ApplicationController
     respond_to do |format|
       if @product.save
         UserNotifier.send_status_change_email(@user, @product,
-                                              "#{Tenant.current_tenant.name} - New product #{@product.name}").deliver_now
+                                              "#{current_tenant.name} - New product #{@product.name}").deliver_now
         logger.info 'The product was saved and now the user is going to be redirected...'
         format.html { redirect_to tenant_products_url, notice: 'Product was successfully created.' }
       else
@@ -77,7 +75,7 @@ class ProductsController < ApplicationController
   def edit
     @user = @product.user
     @status = @product.current_status
-    @statuses = Tenant.current_tenant.statuses
+    @statuses = current_tenant.statuses
     @product.estimates.build
   end
 
@@ -93,7 +91,7 @@ class ProductsController < ApplicationController
         if status.send_email && (current_status != status)
           logger.info 'Send email to customer for status change'
           UserNotifier.send_status_change_email(user, @product,
-                                                "#{Tenant.current_tenant.name} - Status updated for product #{@product.name}").deliver_now
+                                                "#{current_tenant.name} - Status updated for product #{@product.name}").deliver_now
         end
         format.html { redirect_to tenant_products_url, notice: 'Product was successfully updated.' }
       else
@@ -116,7 +114,7 @@ class ProductsController < ApplicationController
     @product = Product.find(params[:product_id])
     logger.debug "Send product card via email #{@product.attributes.inspect}"
     UserNotifier.send_product_card_email_pdf(@product.user, @product,
-                                             "#{Tenant.current_tenant.name} - Product card - #{@product.name}").deliver_later
+                                             "#{current_tenant.name} - Product card - #{@product.name}").deliver_later
     redirect_to tenant_product_path(@product.id, tenant_id: @product.tenant_id), notice: 'Product card sent successfully.'
   end
 

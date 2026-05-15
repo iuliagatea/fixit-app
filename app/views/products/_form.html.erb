@@ -1,4 +1,4 @@
-<%= form_for [Tenant.current_tenant, @product], :html => { :class => "form-horizontal product" } do |f| %>
+<%= form_for [current_tenant, @product], :html => { :class => "form-horizontal product" } do |f| %>
 
   <% if @product.errors.any? %>
     <div id="error_expl" class="panel panel-danger">
@@ -59,12 +59,14 @@
     </div>
   <% end %>
   <%= fields_for(:member) do |m| %>
-      <h5><div class="group-title">Add new customer</div></h5>
-    <div class="input-group mb-3 member">
+    <div class="member">
+    <h5><div class="group-title">Add new customer</div></h5>
+    <div class="input-group mb-3">
       <span class="input-group-text col-lg-2">First name</span>
       <%= m.text_field :first_name, :class => 'form-control' %>
       <span class="input-group-text col-lg-2">Last name</span>
       <%= m.text_field :last_name, :class => 'form-control' %>
+    </div>
     </div>
   <% end %>
   <div id='estimates'>

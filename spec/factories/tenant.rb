@@ -9,6 +9,9 @@ FactoryBot.define do
     end
     description { Faker::Lorem.sentence }
     categories { create_list(:category, 2) }
-    statuses { create_list(:status, 5) }
+
+    after(:create) do |tenant|
+      tenant.create_statuses
+    end
   end
 end

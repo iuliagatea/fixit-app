@@ -13,8 +13,8 @@
     </li>
     <li><hr class="dropdown-divider"></li>
     <li class="dropdown-item">
-      <%= button_to( ("<i class='bi bi-unlock'></i> Sign out").html_safe, destroy_user_session_path,
-                   title: 'Logout', method: :delete) %>
+      <%= button_to("Sign out".html_safe, destroy_user_session_path,
+                   title: 'Logout', method: :delete, class: 'btn btn-danger' ) %>
     </li>
   </ul>
 </li>

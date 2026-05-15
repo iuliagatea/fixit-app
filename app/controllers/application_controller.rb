@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::Base
+  helper_method :current_tenant
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
   before_action :authenticate_tenant!
 
-
   def products
-    @products ||= current_user.is_admin ? Tenant.current_tenant.products : current_user.products
+    @products ||= current_user.is_admin ? current_tenant.products : current_user.products
   end
 
   def must_be_customer
@@ -30,7 +30,7 @@ class ApplicationController < ActionController::Base
   end
 
   def verify_tenant
-    return if params[:tenant_id].to_i == Tenant.current_tenant_id
+    return if params[:tenant_id].to_i == current_tenant.id
 
     not_authorized_redirect
   end
@@ -80,5 +80,11 @@ class ApplicationController < ActionController::Base
   def not_authorized_redirect
     redirect_to :root,
                 flash: { error: 'You are not authorized to do this action' }
+  end
+
+  private
+
+  def current_tenant
+    Tenant.current_tenant
   end
 end

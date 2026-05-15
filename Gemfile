@@ -60,8 +60,10 @@ group :development, :test do
   gem 'rubocop'
   gem 'rubocop-rails', require: false
   gem 'rubocop-rspec', require: false
-  gem 'faker', '~> 1.6', '>= 1.6.3'
+  gem 'rubocop-faker', require: false
+  gem 'faker', '~> 2.2', '>= 2.2.0'
   gem 'shoulda-matchers'
+  gem "rails-controller-testing"
 end
 
 group :development do

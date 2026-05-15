@@ -1,0 +1,34 @@
+<% if @product.estimates.count > 0 %>
+<h4>Estimate</h4>
+<table class="table">
+  <tbody>
+    <thead>
+      <th>Name</th>
+      <th>Quantity</th>
+      <th>Price</th>
+      <th>Value</th>
+      <th>Actions</th>
+    </thead>
+    <% @product.estimates.each do |estimate| %>
+      <tr>
+        <td><%= estimate.name %></td>
+        <td><%= estimate.quantity %></td>
+        <td><%= estimate.price %></td>
+        <td><%= estimate.quantity*estimate.price %></td>
+        <td> <%= button_to t('.destroy', :default => t("helpers.links.destroy")),
+                            tenant_product_estimate_path(Tenant.current_tenant, @product, estimate),
+                            :method => 'delete',
+                            :data => { :confirm => t('.confirm', :default => t("helpers.links.confirm", :default => 'Are you sure?')) },
+                            :class => 'btn btn-danger' %></td>
+      </tr>
+    <% end %>
+    <tr>
+      <th></th>
+      <th></th>
+      <th>Total: </th>
+      <th><%= @product.estimated_value %></th>
+      <th></th>
+    </tr>
+  </tbody>
+</table>
+<% end %>

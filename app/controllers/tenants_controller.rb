@@ -3,6 +3,8 @@
 class TenantsController < ApplicationController
   skip_before_action :authenticate_tenant!, only: %i[search contact send_email]
   before_action :find_tenant, except: %i[search]
+  before_action :verify_tenant, only: %i[edit update]
+  before_action :verify_user, only: %i[edit update]
 
   def edit
     @categories = Category.where(entity: 'tenant')
@@ -13,7 +15,6 @@ class TenantsController < ApplicationController
     @user_review = @tenant.reviews.where(user_id: current_user)
     if @user_review.any?
       @reviews = paginate(@tenant.reviews.order(created_at: :desc), params[:page], 5)
-      @reviews.unshift(@user_review)
     else
       @reviews = []
     end
@@ -39,7 +40,7 @@ class TenantsController < ApplicationController
               redirect_to edit_tenant_path(@tenant) and return
             end
           end
-          format.html { redirect_to edit_plan_path, notice: 'Tenant was successfully updated.' }
+          format.html { redirect_to tenant_edit_plan_path(@tenant), notice: 'Tenant was successfully updated.' }
         else
           format.html { render :edit }
         end
@@ -56,7 +57,7 @@ class TenantsController < ApplicationController
 
   def search
     @tenants = TenantSearch.new(params).search
-    return flash[:notice] = 'No result for your search' unless @tenants
+    return flash[:notice] = 'No result for your search' unless @tenants.any?
 
     @tenants = paginate(@tenants, params[:page]) if @tenants
   end

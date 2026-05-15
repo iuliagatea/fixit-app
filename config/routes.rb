@@ -2,7 +2,7 @@
 
 Rails.application.routes.draw do
   root to: 'home#index'
-
+  resources :categories
   resources :reviews, param: :review_id
   resources :tenants, param: :tenant_id
   resources :tenants, only: [] do
@@ -19,6 +19,8 @@ Rails.application.routes.draw do
     end
     get 'contact'
     post 'send_email'
+    match '/plan/edit' => 'tenants#edit', via: :get, as: :edit_plan
+    match '/plan/update' => 'tenants#update', via: %i[put patch], as: :update_plan
   end
 
   get 'about', to: 'pages#about'
@@ -36,7 +38,4 @@ Rails.application.routes.draw do
     confirmations: 'confirmations',
     sessions: 'sessions'
   }
-  match '/plan/edit' => 'tenants#edit', via: :get, as: :edit_plan
-
-  match '/plan/update' => 'tenants#update', via: %i[put patch], as: :update_plan
 end

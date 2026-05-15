@@ -4,7 +4,7 @@
   <p><%= o.review %></p>
   <% if current_user.id == o.user_id || current_user.is_admin %>
       <%= link_to t('.destroy', :default => t("helpers.links.destroy")),
-                  review_path(o, tenant: Tenant.current_tenant),
+                  review_path(o, tenant: current_tenant),
                   :method => :delete,
                   :data => { :confirm => t('.confirm', :default => t("helpers.links.confirm", :default => 'Are you sure?')) },
                   :class => 'btn btn-xs btn-danger' %>

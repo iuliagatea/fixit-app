@@ -6,8 +6,6 @@ class UserNotifier < ApplicationMailer
   def send_product_card_email_pdf(user, product, subject)
     @user = user
     @product = product
-    @product_statuses = @product.product_statuses
-    @estimates = @product.estimates
     product_card = WickedPdf.new.pdf_from_string(
       render_to_string(
         pdf: "#{@product.code}_product_card.pdf",
@@ -22,8 +20,6 @@ class UserNotifier < ApplicationMailer
 
   def send_status_change_email(user, product, subject)
     @product = product
-    @product_statuses = @product.product_statuses
-    @estimates = @product.estimates
     mail to: user.email, subject: subject
   end
 

@@ -35,7 +35,7 @@
     <%= link_to 'Edit', edit_tenant_product_estimate_path, class: 'btn btn-default' %>
 
      <%= link_to t('.destroy', :default => t("helpers.links.destroy")),
-                                 tenant_product_estimate_path(Tenant.current_tenant, @product, @estimate),
+                                 tenant_product_estimate_path(current_tenant, @product, @estimate),
                                  :method => 'delete',
                                  :data => { :confirm => t('.confirm', :default => t("helpers.links.confirm", :default => 'Are you sure?')) },
                                  :class => 'btn btn-danger' %>

@@ -4,7 +4,7 @@
   </h1> 
   <br />
   <% if t.categories.any? %>
-    <p><%= render t.categories %></p>
+    <h5><%= render t.categories %></h5>
   <% end %>
 </div>
 <p><%= t.description %></p>
@@ -24,19 +24,19 @@
     <div class="new_review">
       <h3>New Review</h3>
       <%= form_tag({:controller => "reviews", :action => "create"}, {:method => "post", :class => "form-horizontal"}) do %>
-        <div class="row col-md-12">
-          <%= label_tag 'name', 'Title' %>
-          <%= text_field_tag(:title, "", class:'form-control' ) %>
+        <div class="input-group mb-3">
+          <span class="input-group-text col-lg-2">Title</span>
+          <%= text_field :title, :class => 'form-control', :placeholder => "Title" %>
         </div> 
-        <div class="row col-md-12">
-          <%= label_tag 'name', 'Review' %>
-          <%= text_area_tag(:review, "", class:'form-control' ) %>
+        <div class="input-group mb-3">
+          <span class="input-group-text col-lg-2">Description</span>
+          <%= text_area :review, :class => 'form-control', :placeholder => "Title" %>
         </div> 
-        <%= hidden_field_tag(:tenant_id, t.id ) %>
-        <%= hidden_field_tag(:user_id, current_user.id ) %>
+        <%= hidden_field(:tenant_id, t.id ) %>
+        <%= hidden_field(:user_id, current_user.id ) %>
         <br />
-        <div class="row col-md-12 buttons">
-          <%= submit_tag "Save".html_safe, class: "btn btn-primary", id:"submit" %>
+        <div class="input-group mb-3">
+          <%= submit_tag "Save".html_safe, class: "btn btn-outline-primary", id:"submit" %>
           <a id="cancel_review" href="#" class = 'btn btn-default'>Cancel review</a>
         </div>
       <% end %>

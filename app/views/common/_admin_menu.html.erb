@@ -1,20 +1,20 @@
 <li>
   <%= link_to "<i class='bi bi-person'></i> View profile".html_safe,
-              tenant_path, title: 'Edit Profile',  class: 'dropdown-item' %>
+              tenant_path(current_tenant), title: 'Edit Profile',  class: 'dropdown-item' %>
 </li>
 <li><%= link_to "<i class='bi bi-plus-square'></i> Add Customer Product".html_safe,
-                new_tenant_product_path,  class: 'dropdown-item' %>
+                new_tenant_product_path(current_tenant),  class: 'dropdown-item' %>
 </li>
 <li>
   <%= link_to "<i class='bi bi-list-task'></i> Products".html_safe,
-              tenant_products_path, class: "dropdown-item" %>
+              tenant_products_path(current_tenant), class: "dropdown-item" %>
 </li>
 <li>
   <%= link_to "<i class='bi bi-list'></i> Statuses".html_safe,
-              tenant_statuses_path, class: "dropdown-item" %>
+              tenant_statuses_path(current_tenant), class: "dropdown-item" %>
 </li>
 <li><hr class="dropdown-divider"></li>
 <li>
-  <%= link_to "<i class='bi bi-person-gear'></i> Account Settings".html_safe, edit_plan_path,
+  <%= link_to "<i class='bi bi-person-gear'></i> Account Settings".html_safe, tenant_edit_plan_path(current_tenant),
               class: "dropdown-item" %>
 </li>
