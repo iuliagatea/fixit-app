@@ -16,7 +16,7 @@ end
 RSpec.shared_examples 'new' do |resource|
   it 'assigns values to variables' do
     subject
-    expect(assigns(resource)).to be_nil
+    expect(assigns(resource).id).to be_nil
   end
   it { expect(subject).to render_template(:new) }
 end

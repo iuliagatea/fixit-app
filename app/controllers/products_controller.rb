@@ -13,12 +13,7 @@ class ProductsController < ApplicationController
     logger.debug "Showing products of tenant with id #{params[:tenant_id]} for user #{current_user.email}"
     respond_to do |format|
       format.html
-      format.pdf do
-        render pdf: "#{@product.code}_product_card",
-               template: 'products/product_pdf',
-               formats: [:html],
-               show_as_html: params[:debug].present?
-      end
+      format.pdf { render_product_pdf }
     end
   end
 
@@ -51,13 +46,13 @@ class ProductsController < ApplicationController
     end
     @product.user = @user
 
-    status_id = params.dig(:status, :id)
-    if status_id.present?
-      @product.statuses << Status.find(status_id)
-    else
-      flash[:error] = 'Status is required'
-      render :new and return
-    end
+    #     status_id = params.dig(:status, :id)
+    #     if status_id.present?
+    #       @product.statuses << Status.find(status_id)
+    #     else
+    #       flash[:error] = 'Status is required'
+    #       render :new and return
+    #     end
 
     respond_to do |format|
       if @product.save
@@ -86,6 +81,7 @@ class ProductsController < ApplicationController
     current_status = @product.current_status
     @product.statuses << status unless current_status == status
     respond_to do |format|
+        byebug
       if @product.update(product_params)
         logger.info 'The product was updated and now the user is going to be redirected...'
         if status.send_email && (current_status != status)
@@ -140,5 +136,12 @@ class ProductsController < ApplicationController
 
   def user_params
     params.require(:user).permit(:email, :password, :password_confirmation)
+  end
+
+  def render_product_pdf
+    render pdf: "#{@product.code}_product_card",
+           template: 'products/product_pdf',
+           formats: [:html],
+           show_as_html: params[:debug].present?
   end
 end

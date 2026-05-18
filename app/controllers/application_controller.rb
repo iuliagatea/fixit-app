@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::Base
+  include Pundit::Authorization
+
   helper_method :current_tenant
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
@@ -8,6 +10,8 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_tenant!
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
   rescue_from StandardError, with: :internal_error
+
+  rescue_from Pundit::NotAuthorizedError, with: :not_authorized_redirect
 
   def products
     @products ||= current_user.is_admin ? current_tenant.products : current_user.products

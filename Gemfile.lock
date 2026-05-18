@@ -207,6 +207,8 @@ GEM
       stringio
     puma (8.0.1)
       nio4r (~> 2.0)
+    pundit (2.5.2)
+      activesupport (>= 3.0.0)
     racc (1.8.1)
     rack (3.2.6)
     rack-session (2.1.2)
@@ -399,6 +401,7 @@ DEPENDENCIES
   pg
   pg_search
   puma
+  pundit (~> 2.5)
   rails
   rails-controller-testing
   rails_12factor
