@@ -24,47 +24,19 @@ class ProductsController < ApplicationController
   end
 
   def create
-    @product = Product.new(product_params)
-    logger.debug "New product: #{@product.attributes.inspect}"
-    logger.debug "Product should be valid: #{@product.valid?}"
+    result = Products::CreateService.call(
+      tenant_id: current_tenant.id,
+      user_params: user_params,
+      member_params: member_params,
+      product_params: product_params,
+      status_id: params[:status][:id]
+    )
 
-    @user = User.find_by(email: params[:user]['email'])
-    if @user.blank?
-      @user = User.new(user_params)
-      logger.debug "New user, member: #{@user.attributes.inspect}"
-      if @user.save_and_invite_member && @user.create_member(member_params)
-        logger.debug "New member added and invitation email sent to #{@user.email}."
-        flash[:notice] = "New member added and invitation email sent to #{@user.email}."
-      else
-        logger.error "Errors occurred while creating user #{@user.errors}"
-        flash[:error] = 'errors occurred!'
-        @member = Member.new(member_params) # only used if need to revisit form
-        render :new
-      end
-    else
-      @user.tenants << current_tenant unless @user.tenants.include?(current_tenant)
-    end
-    @product.user = @user
-
-    #     status_id = params.dig(:status, :id)
-    #     if status_id.present?
-    #       @product.statuses << Status.find(status_id)
-    #     else
-    #       flash[:error] = 'Status is required'
-    #       render :new and return
-    #     end
-
-    respond_to do |format|
-      if @product.save
-        UserNotifier.send_status_change_email(@user, @product,
-                                              "#{current_tenant.name} - New product #{@product.name}").deliver_later
-        logger.info 'The product was saved and now the user is going to be redirected...'
-        format.html { redirect_to tenant_products_url, notice: 'Product was successfully created.' }
-      else
-        logger.error "Errors occurred while creating product #{@product.errors}."
-        format.html { render :new }
-      end
-    end
+    redirect_to tenant_product_path(result, tenant_id: current_tenant.id), notice: 'Product was successfully created.'
+  rescue Products::CreateService::ServiceError => e
+    flash.now[:error] = e.message
+    @statuses = current_tenant.statuses
+    render :new
   end
 
   def edit
@@ -75,42 +47,30 @@ class ProductsController < ApplicationController
   end
 
   def update
-    user = User.find_by(email: params[:user]['email'])
-    @product.user = user
-    status = Status.find(params[:status]['id'])
-    current_status = @product.current_status
-    @product.statuses << status unless current_status == status
-    respond_to do |format|
-        byebug
-      if @product.update(product_params)
-        logger.info 'The product was updated and now the user is going to be redirected...'
-        if status.send_email && (current_status != status)
-          logger.info 'Send email to customer for status change'
-          UserNotifier.send_status_change_email(user, @product,
-                                                "#{current_tenant.name} - Status updated for product #{@product.name}").deliver_later
-        end
-        format.html { redirect_to tenant_products_url, notice: 'Product was successfully updated.' }
-      else
-        logger.error "Errors occurred while updating product #{@product.attributes.inspect}."
-        format.html { render :edit }
-      end
-    end
+    result = Products::UpdateService.call(
+      product: @product,
+      product_params: product_params,
+      new_status_id: params[:status][:id]
+    )
+
+    redirect_to tenant_product_path(result, tenant_id: current_tenant.id), notice: 'Product successfully updated.'
+  rescue Products::UpdateService::ServiceError => e
+    flash.now[:error] = e.message
+    @statuses = current_tenant.statuses
+    render :edit
   end
 
   def destroy
     logger.debug "Deleting product #{@product.attributes.inspect}"
     @product.destroy
-    respond_to do |format|
-      logger.info 'The product was deleted and now the user is going to be redirected...'
-      format.html { redirect_to tenant_products_url, notice: 'Product was successfully destroyed.' }
-    end
+    redirect_to tenant_products_path(tenant_id: current_tenant.id), notice: 'Product deleted.'
   end
 
   def send_product_card
     @product = Product.find(params[:product_id])
     logger.debug "Send product card via email #{@product.attributes.inspect}"
-    UserNotifier.send_product_card_email_pdf(@product.user, @product,
-                                             "#{current_tenant.name} - Product card - #{@product.name}").deliver_later
+
+    Products::CardEmailJob.perform_async(@product.id)
     redirect_to tenant_product_path(@product.id, tenant_id: @product.tenant_id),
                 notice: 'Product card sent successfully.'
   end

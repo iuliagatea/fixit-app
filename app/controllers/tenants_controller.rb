@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 class TenantsController < ApplicationController
   skip_before_action :authenticate_tenant!, only: %i[search contact send_email]
   before_action :find_tenant, except: %i[search]
@@ -47,12 +49,12 @@ class TenantsController < ApplicationController
   def contact; end
 
   def send_email
-    UserNotifier.send_email(params).deliver_later
+    Tenants::ContactJob.perform_async(email_params)
     redirect_to root_path, notice: 'Email was sent successfully.'
   end
 
   def search
-    @tenants = TenantSearch.new(params).search
+    @tenants = Tenants::SearchService.call(params: search_params)
     return flash[:notice] = 'No result for your search' unless @tenants.any?
 
     @tenants = paginate(@tenants, params[:page]) if @tenants
@@ -66,5 +68,13 @@ class TenantsController < ApplicationController
 
   def find_tenant
     @tenant = Tenant.find(params[:tenant_id])
+  end
+
+  def search_params
+    params.permit(:query, :category_id)
+  end
+
+  def email_params
+    params.permit(:tenant_id, :name, :email, :subject, :message, :product_id).to_json
   end
 end

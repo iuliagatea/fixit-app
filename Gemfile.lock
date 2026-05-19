@@ -265,6 +265,8 @@ GEM
       psych (>= 4.0.0)
       tsort
     recaptcha (5.21.2)
+    redis-client (0.29.0)
+      connection_pool
     regexp_parser (2.12.0)
     reline (0.6.3)
       io-console (~> 0.5)
@@ -332,6 +334,12 @@ GEM
       rails (>= 4.0.0)
     shoulda-matchers (6.5.0)
       activesupport (>= 5.2.0)
+    sidekiq (7.3.10)
+      base64
+      connection_pool (>= 2.3.0, < 3)
+      logger
+      rack (>= 2.2.4, < 3.3)
+      redis-client (>= 0.23.0, < 1)
     spring (4.5.0)
     sprockets (4.2.2)
       concurrent-ruby (~> 1.0)
@@ -415,6 +423,7 @@ DEPENDENCIES
   sdoc
   seems_rateable
   shoulda-matchers
+  sidekiq
   spring
   sprockets-rails (~> 3.5)
   stripe

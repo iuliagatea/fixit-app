@@ -21,8 +21,7 @@ class RegistrationsController < Devise::RegistrationsController
     sign_out_session!
 
     Tenant.transaction do
-      byebug
-      @tenant = TenantCreationService.call(tenant_params, user_params)
+      @tenant = Tenants::CreateService.call(tenant_params: tenant_params, user_params: user_params)
       logger.debug "Creating tenant: #{@tenant.attributes.inspect}"
       logger.debug "Tenant should be valid: #{@tenant.valid?}"
       if @tenant.errors.empty? # tenant created

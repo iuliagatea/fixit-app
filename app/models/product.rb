@@ -17,7 +17,7 @@ class Product < ActiveRecord::Base
   validates :tenant_id, presence: true
   validates :user_id, presence: true
   validate :validate_plan_limit, on: :create
-  validate :validate_status_exists
+  validate :validate_status_exists, unless: -> { new_record? }
 
   scope :active, -> { where(status: :active) }
   scope :by_tenant, ->(tenant_id) { where(tenant_id: tenant_id) }
@@ -36,6 +36,17 @@ class Product < ActiveRecord::Base
 
   def estimated_value
     estimates.any? ? estimates.sum('price * quantity').to_d : 0
+  end
+
+  def transition_to_status!(new_status, _comment = nil)
+    raise ArgumentError, 'Status must be a Status record' unless new_status.is_a?(Status)
+    return if current_status == new_status
+
+    transaction do
+      product_statuses.create!(status: new_status)
+
+      Products::UpdatedNotificationJob.perform_async(id) if new_status.send_email
+    end
   end
 
   private
@@ -62,16 +73,12 @@ class Product < ActiveRecord::Base
   end
 
   def notify_creation
-    ProductCreatedNotificationJob.perform_later(id)
+    Products::CreatedNotificationJob.perform_async(id)
   end
 
   def notify_update
     return unless saved_changes.keys.intersect?(%w[name expected_completion_date])
 
-    ProductUpdatedNotificationJob.perform_later(id)
-  end
-
-  def statuses_changed?
-    saved_changes.keys.include?('status')
+    Products::UpdatedNotificationJob.perform_async(id)
   end
 end

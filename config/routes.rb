@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require 'sidekiq/web'
+
 Rails.application.routes.draw do
+  mount Sidekiq::Web => '/sidekiq' # access it at http://localhost:3000/sidekiq
   root to: 'home#index'
   resources :categories
   resources :reviews, param: :review_id

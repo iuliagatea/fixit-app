@@ -2,7 +2,7 @@
 <html>
   <%= render 'header' %>
   <body>
-    <h2>Status for product <%= link_to (@product.code + " - " + @product.name), tenant_product_url(@product, tenant_id: @product.tenant_id) %> was updated.</h2>
+    <h2>Product <%= link_to (@product.code + " - " + @product.name), tenant_product_url(@product, tenant_id: @product.tenant_id) %> was updated.</h2>
     <%= render 'products/show' %>
     <%= render 'products/estimate_show_pdf' %>
   </body>

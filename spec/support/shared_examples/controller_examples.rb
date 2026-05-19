@@ -8,7 +8,7 @@ RSpec.shared_examples 'index' do |resource|
   it { expect(subject).to render_template(:index) }
   it {
     subject
-    byebug
+
     expect(assigns(assigned_resource)).to match(resource_class.all)
   }
 end

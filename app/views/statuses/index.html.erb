@@ -18,43 +18,43 @@
     <% @statuses.each do |status| %>
       <tr>
         <td>
-          <h4>
+          <p>
              <%= link_to status.name, edit_tenant_status_path(id: status.id) %>
-          </h4>
+          </p>
         </td>
         <td>
-          <h5>
+          <p>
              <%= link_to pluralize(status.status_products(current_user).count, "product"), tenant_status_products_path(status_id: status.id) %>
-          </h5>
+          </p>
         </td>
         <td>
-          <h5>
+          <p>
              <% if status.send_email %>
                Send emails
              <% else %>
                No emails
              <% end %>
-          </h5>
+          </p>
         </td>
         <td style="background-color: <%= status.color %>">
         </td>
         <td>
-          <h5>
+          <p>
              <% if status.is_active %>
                Active
              <% else %>
                Inactive
              <% end %>
-          </h5>
+          </p>
         </td>
         <td>
         <% if (status.status_products(current_user).count == 0 && status.can_be_deleted)  %>
-          <h5 class="status-delete">
+          <p class="status-delete">
             <%= link_to "Delete".html_safe,
                         tenant_status_path(status, tenant_id: status.tenant_id),
                         :method => :delete,
                         :data => { :confirm => t('.confirm', :default => t("helpers.links.confirm", :default => 'Are you sure?')) } %>
-          </h5>
+          </p>
         <% end %>
         </td>
       </tr>

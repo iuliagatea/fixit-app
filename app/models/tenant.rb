@@ -29,8 +29,10 @@ class Tenant < ActiveRecord::Base
   accepts_nested_attributes_for :payment
   validates_presence_of :name
   validates_uniqueness_of :name
-  validate :must_have_one_category
+  validate :must_have_one_category, unless: -> { new_record? }
 
+  before_create :initialize_category
+  after_create :create_statuses
   before_destroy :clear_associated_users
 
   def create_statuses
@@ -51,6 +53,13 @@ class Tenant < ActiveRecord::Base
   end
 
   private
+
+  def initialize_category
+    return if categories.present?
+
+    initial_category = Category.find_or_create_by(name: 'Service / Reparatii')
+    categories << initial_category if initial_category.present?
+  end
 
   def clear_associated_users
     users.clear
