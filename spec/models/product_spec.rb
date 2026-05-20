@@ -36,9 +36,9 @@ RSpec.describe Product, type: :model do
     end
 
     context 'code validation' do
-        before do
-            set_current_tenant(tenant.id)
-        end
+      before do
+        set_current_tenant(tenant.id)
+      end
       it 'validates code format (uppercase, downcase, numbers, hyphens only)' do
         product.code = 'invalid-code-123'
         expect(product).to be_valid
@@ -86,7 +86,7 @@ RSpec.describe Product, type: :model do
 
     context 'status validation' do
       it 'requires at least one status' do
-          set_current_tenant(tenant.id)
+        set_current_tenant(tenant.id)
         product.statuses = []
         expect(product).to be_invalid
         expect(product.errors[:base]).to include('At least one status is required')
@@ -95,7 +95,7 @@ RSpec.describe Product, type: :model do
   end
 
   describe 'Scopes' do
-      let(:other_tenant) { create(:tenant, :free) }
+    let(:other_tenant) { create(:tenant, :free) }
     let(:tenant_product1) { create(:product, tenant: tenant, user: customer) }
     let(:tenant_product2) { create(:product, tenant: tenant, user: customer) }
     let(:tenant_product3) { create(:product, tenant: tenant, user: customer) }
@@ -103,7 +103,7 @@ RSpec.describe Product, type: :model do
     let(:high_value_product) { create(:product, tenant: tenant, user: customer) }
 
     before do
-        set_current_tenant(tenant.id)
+      set_current_tenant(tenant.id)
       create(:estimate, product: high_value_product, price: 8000, quantity: 2)
     end
 
@@ -143,9 +143,9 @@ RSpec.describe Product, type: :model do
   end
 
   describe 'Instance Methods' do
-      before do
-              set_current_tenant(tenant.id)
-              end
+    before do
+      set_current_tenant(tenant.id)
+    end
     describe '#current_status' do
       it 'returns the most recent status' do
         status1 = create(:status, tenant: tenant, name: 'Test')
@@ -246,7 +246,7 @@ RSpec.describe Product, type: :model do
         product.transition_to_status!(status1)
         product.transition_to_status!(status2)
 
-        expect(product.product_statuses.count).to eq(3) #initial status + 2 transitions
+        expect(product.product_statuses.count).to eq(3) # initial status + 2 transitions
       end
     end
   end

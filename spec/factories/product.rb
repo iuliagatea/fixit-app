@@ -8,9 +8,9 @@ FactoryBot.define do
     comments { Faker::Lorem.sentence }
 
     trait :with_estimates do
-        after(:create) do |product|
-          create_list(:estimate, 3, product: product)
-        end
+      after(:create) do |product|
+        create_list(:estimate, 3, product: product)
+      end
     end
   end
 end
