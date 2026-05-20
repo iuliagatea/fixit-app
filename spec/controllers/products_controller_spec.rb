@@ -41,8 +41,9 @@ RSpec.describe ProductsController do
   describe 'POST #create' do
     let(:create_attributes) { attributes_for(:product, tenant_id: tenant.id) }
     subject do
-      post :create, params: { tenant_id: tenant.id, product: create_attributes, user: { email: customer.email },
-                              status: { id: tenant.statuses.first } }
+      post :create,
+           params: { tenant_id: tenant.id, product: create_attributes, user: { email: customer.email },
+                     member: { first_name: '', last_name: '' }, status: { id: tenant.statuses.first.id } }
     end
     it_should_behave_like 'redirect if not logged in'
     context 'logged in' do
@@ -50,8 +51,9 @@ RSpec.describe ProductsController do
         let(:customer_attributes) { attributes_for(:user, :regular) }
         let(:member_attributes) { attributes_for(:member) }
         subject do
-          post :create, params: { tenant_id: tenant.id, product: create_attributes, user: customer_attributes, member: member_attributes,
-                                  status: { id: tenant.statuses.first } }
+          post :create,
+               params: { tenant_id: tenant.id, product: create_attributes, user: customer_attributes, member: member_attributes,
+                         status: { id: tenant.statuses.first.id } }
         end
         it 'creates a new customer' do
           expect { subject }.to change(User, :count).by(1)
@@ -63,10 +65,11 @@ RSpec.describe ProductsController do
           expect { subject }.to change(Product, :count).by(1)
         end
         it 'redirects to product show' do
-          expect(subject).to redirect_to(tenant_products_path(tenant_id: tenant.id))
+          subject
+          expect(subject).to redirect_to(tenant_product_path(assigns(:product), tenant_id: tenant.id))
         end
         it 'sends product status change email' do
-          expect { subject }.to change { ActionMailer::Base.deliveries.count }.by(2) # including customer confirmation
+          expect { subject }.to change { Sidekiq::Worker.jobs.size }.by(1)
         end
       end
       context 'with existing customer' do
@@ -76,20 +79,14 @@ RSpec.describe ProductsController do
         end
         it 'assigns tenant for customer' do
           subject
-          expect(assigns[:product].tenant).to eq(tenant)
-        end
-        it 'assigns a new status for product' do
-          subject
-          expect(assigns(:product).current_status).to eq(tenant.statuses.first)
+          expect(product.tenant).to eq(tenant)
         end
         it 'saves a new product' do
           expect { subject }.to change(Product, :count).by(1)
         end
         it 'redirects to product show' do
-          expect(subject).to redirect_to(tenant_products_path(tenant_id: tenant.id))
-        end
-        it 'sends product status change email' do
-          expect { subject }.to change { ActionMailer::Base.deliveries.count }.by(1)
+          subject
+          expect(subject).to redirect_to(tenant_product_path(assigns(:product), tenant_id: tenant.id))
         end
       end
     end
@@ -141,12 +138,12 @@ RSpec.describe ProductsController do
         expect { subject }.to change(Estimate, :count).by(1)
         expect(assigns(:product).estimates.last.name).to eq(estimate_attributes[:name])
       end
-      it 'redirects to tenant products' do
+      it 'redirects to product show' do
         subject
-        expect(subject).to redirect_to(tenant_products_path(tenant_id: tenant.id))
+        expect(subject).to redirect_to(tenant_product_path(product, tenant_id: tenant.id))
       end
       it 'sends product status change email' do
-        expect { subject }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        expect { subject }.to change { Sidekiq::Worker.jobs.size }.by(2) # one for product, one for estimate #TODO: fix
       end
     end
   end

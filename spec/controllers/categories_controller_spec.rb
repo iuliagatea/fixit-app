@@ -3,19 +3,26 @@
 require 'rails_helper'
 
 RSpec.describe CategoriesController do
-  include_context 'initialize'
-
-  before do
-    admin_user.email = 'fixit.app2@gmail.com'
-    admin_user.save!
-  end
-
+  let(:tenant) { create(:tenant, :free) }
+  let(:admin_user) { create(:user, :admin, email: 'fixit.app2@gmail.com') }
   let!(:categories) { create_list(:category, 10) }
   let(:category) { categories.first }
 
+  before do
+    set_current_tenant(tenant.id)
+    login(admin_user)
+  end
+
   describe 'GET #index' do
     subject { get :index }
-    include_examples 'index', 'category'
+
+    it { expect(subject).to have_http_status(200) }
+    it { expect(subject).to render_template(:index) }
+    it {
+      subject
+
+      expect(assigns(:categories)).to match(Category.all)
+    }
   end
 
   describe 'GET #new' do

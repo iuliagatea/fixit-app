@@ -24,7 +24,6 @@ class Product < ActiveRecord::Base
   scope :by_user, ->(user_id) { where(user_id: user_id) }
   scope :by_status, ->(status_id) { joins(:product_statuses).where(product_statuses: { status_id: status_id }) }
   scope :recent, -> { order(created_at: :desc) }
-  scope :high_value, -> { where('estimated_value > ?', 10_000) }
 
   before_create :initialize_status
   after_create_commit :notify_creation

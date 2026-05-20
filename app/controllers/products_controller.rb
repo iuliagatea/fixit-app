@@ -24,7 +24,7 @@ class ProductsController < ApplicationController
   end
 
   def create
-    result = Products::CreateService.call(
+    @product = Products::CreateService.call(
       tenant_id: current_tenant.id,
       user_params: user_params,
       member_params: member_params,
@@ -32,7 +32,7 @@ class ProductsController < ApplicationController
       status_id: params[:status][:id]
     )
 
-    redirect_to tenant_product_path(result, tenant_id: current_tenant.id), notice: 'Product was successfully created.'
+    redirect_to tenant_product_path(@product, tenant_id: current_tenant.id), notice: 'Product was successfully created.'
   rescue Products::CreateService::ServiceError => e
     flash.now[:error] = e.message
     @statuses = current_tenant.statuses

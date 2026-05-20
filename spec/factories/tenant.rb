@@ -10,7 +10,6 @@ FactoryBot.define do
       plan { 'premium' }
     end
     description { Faker::Lorem.sentence }
-    categories { create_list(:category, 2) }
 
     after(:create, &:create_statuses)
   end
