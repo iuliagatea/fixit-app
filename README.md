@@ -1,4 +1,18 @@
-FixIt is a Rails 7.2 SaaS application that enables service providers (businesses) to manage and showcase their products/services with Stripe payments integration. Built with PostgreSQL, Devise authentication, and multi-tenant architecture using thread-local tenant context.
+A Rails 7.2 SaaS application that enables service providers (businesses) to manage and showcase their products/services with Stripe payments integration. Built with PostgreSQL, Devise authentication, and multi-tenant architecture using thread-local tenant context.
+
+### Tech Stack
+
+* **Framework** — Ruby on Rails 7.2.3.1
+* **Database** — PostgreSQL with pg_search for full-text search
+* **Authentication** — Devise with email confirmation
+* **Payments** — Stripe (production ready)
+* **Background Jobs** — Sidekiq (configurable)
+* **Frontend** — Bootstrap 5, jQuery, Turbo
+* **PDF** — WickedPDF with wkhtmltopdf
+* **Testing** — RSpec 3.13, FactoryBot, Shoulda Matchers
+* **Code Quality** — Rubocop, Rubocop-Rails, Rubocop-RSpec
+  
+---
 
 ### Core Features
 
@@ -12,17 +26,7 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 * **Email Notifications** — Async status updates and product cards via Sidekiq
 * **Audit Logging** — Track product changes and status transitions
 
-### Tech Stack
-
-* **Framework** — Ruby on Rails 7.2.3.1
-* **Database** — PostgreSQL with pg_search for full-text search
-* **Authentication** — Devise with email confirmation
-* **Payments** — Stripe (production ready)
-* **Background Jobs** — Sidekiq (configurable)
-* **Frontend** — Bootstrap 5, jQuery, Turbo
-* **PDF** — WickedPDF with wkhtmltopdf
-* **Testing** — RSpec 3.13, FactoryBot, Shoulda Matchers
-* **Code Quality** — Rubocop, Rubocop-Rails, Rubocop-RSpec
+---
 
 ### Quick Start
 
@@ -55,6 +59,8 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 
    Use `byebug` in controllers/services to step through code during requests.
 
+---
+
 ### Architecture Highlights
 
 **Multi-Tenancy Pattern:**
@@ -76,6 +82,8 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 - **Member** — Tenant user profile (first_name, last_name)
 - **Payment** — Stripe integration for plan upgrades
 
+---
+
 ### Deployment
 
 **Environment Variables (set in production):**
@@ -90,6 +98,8 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 
 **Rails Console:**
   bin/rails console production
+
+---
 
 ### File Structure
 
@@ -109,6 +119,8 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 |   config/environments/    | Environment-specific config
 |   config/routes.rb        | REST routing
 
+---
+
 ### Contributing Guidelines
 
 1. Write tests first (RSpec)
@@ -116,6 +128,8 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 3. Use services for complex business logic
 4. Use background jobs for email/heavy operations
 5. Include migrations for schema changes
+
+---
 
 ### Known Limitations
 
