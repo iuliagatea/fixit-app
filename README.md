@@ -1,8 +1,6 @@
-== FixIt: Multi-Tenant Service Directory & Product Management Platform
-
 FixIt is a Rails 7.2 SaaS application that enables service providers (businesses) to manage and showcase their products/services with Stripe payments integration. Built with PostgreSQL, Devise authentication, and multi-tenant architecture using thread-local tenant context.
 
-=== Core Features
+### Core Features
 
 * **Multi-Tenant Architecture** — Isolated business accounts with role-based access control
 * **Product Management** — Create, track, and manage service products with statuses, estimates, and PDF generation
@@ -14,7 +12,7 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 * **Email Notifications** — Async status updates and product cards via Sidekiq
 * **Audit Logging** — Track product changes and status transitions
 
-=== Tech Stack
+### Tech Stack
 
 * **Framework** — Ruby on Rails 7.2.3.1
 * **Database** — PostgreSQL with pg_search for full-text search
@@ -26,7 +24,7 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 * **Testing** — RSpec 3.13, FactoryBot, Shoulda Matchers
 * **Code Quality** — Rubocop, Rubocop-Rails, Rubocop-RSpec
 
-=== Quick Start
+### Quick Start
 
 1. **Setup Environment**
    bin/setup              # Install gems, create DB, seed data
@@ -57,7 +55,7 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 
    Use `byebug` in controllers/services to step through code during requests.
 
-=== Architecture Highlights
+### Architecture Highlights
 
 **Multi-Tenancy Pattern:**
 - Tenant context set per-request via `ApplicationController#authenticate_tenant!`
@@ -78,7 +76,7 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 - **Member** — Tenant user profile (first_name, last_name)
 - **Payment** — Stripe integration for plan upgrades
 
-=== Deployment
+### Deployment
 
 **Environment Variables (set in production):**
   STRIPE_TEST_PUBLISHABLE_KEY=pk_test_...
@@ -93,26 +91,25 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 **Rails Console:**
   bin/rails console production
 
-=== File Structure
+### File Structure
 
-  app/
-    models/             # Domain logic (Product, Tenant, User, etc.)
-    controllers/        # Request handlers (ProductsController, TenantsController)
-    services/           # Business logic encapsulation (ProductCreationService, etc.)
-    jobs/               # Background jobs (ProductCreateNotificationJob, etc.)
-    mailers/            # Email templates (UserNotifier)
-    views/              # ERB templates organized by controller
-  spec/
-    models/             # Model unit tests
-    controllers/        # Controller integration tests
-    factories/          # FactoryBot factories for test data
-    support/            # Shared examples, helpers
-  config/
-    initializers/       # Stripe, Devise, Seemsrateable, etc.
-    environments/       # Environment-specific config
-    routes.rb           # REST routing
+| File | Purpose |
+|------|---------|
+|   app/models/             | Domain logic (Product, Tenant, User, etc.)
+|   app/controllers/        | Request handlers (ProductsController, TenantsController)
+|   app/services/           | Business logic encapsulation (ProductCreationService, etc.)
+|   app/jobs/               | Background jobs (ProductCreateNotificationJob, etc.)
+|   app/mailers/            | Email templates (UserNotifier)
+|   app/views/              | ERB templates organized by controller
+|   spec/models/            | Model unit tests
+|   spec/controllers/       | Controller integration tests
+|   spec/factories/         | FactoryBot factories for test data
+|   spec/support/           | Shared examples, helpers
+|   config/initializers/    | Stripe, Devise, Seemsrateable, etc.
+|   config/environments/    | Environment-specific config
+|   config/routes.rb        | REST routing
 
-=== Contributing Guidelines
+### Contributing Guidelines
 
 1. Write tests first (RSpec)
 2. Follow Rubocop conventions (run: `rubocop`)
@@ -120,7 +117,7 @@ FixIt is a Rails 7.2 SaaS application that enables service providers (businesses
 4. Use background jobs for email/heavy operations
 5. Include migrations for schema changes
 
-=== Known Limitations
+### Known Limitations
 
 - Thread-local tenant context works for single-threaded servers; migrate to RequestStore for Thread.new operations
 - Free plan limited to 500 products (hard limit enforced)
