@@ -10,7 +10,8 @@ class TenantMemberProductsController < ApplicationController
   private
 
   def products
-    @products = @user.is_admin ? current_tenant.products.where(user_id: params[:user_id]) : @user.products
+    query = @user.is_admin ? current_tenant.products.where(user_id: params[:user_id]) : @user.products
+    @products = query.includes(:tenant, :user, :statuses, :estimates)
   end
 
   def find_user

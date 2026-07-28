@@ -61,7 +61,8 @@ class ApplicationController < ActionController::Base
     authenticate_user! unless user_signed_in?
     Tenant.set_current_tenant(current_user)
 
-    return if user_signed_in? && !current_tenant.nil? && current_user.tenants.exists?(id: current_tenant.id)
+    return if user_signed_in? && !current_tenant.nil? &&
+        Tenant.joins(:users).where(tenants: { id: current_tenant.id }, users: { id: current_user.id }).exists?
 
     not_authorized_redirect
   end

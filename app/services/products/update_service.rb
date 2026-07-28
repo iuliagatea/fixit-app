@@ -16,7 +16,7 @@ module Products
       Product.transaction do
         @product.update!(@product_params)
 
-        if @new_status_id.present? && @product.current_status.id != @new_status_id.to_i
+        if @new_status_id.present? && @product.current_status_id != @new_status_id.to_i
           new_status = Status.find(@new_status_id)
           @product.transition_to_status!(new_status)
         end

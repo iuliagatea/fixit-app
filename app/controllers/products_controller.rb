@@ -6,7 +6,7 @@ class ProductsController < ApplicationController
   before_action :verify_user, except: %i[show index]
 
   def index
-    @products = products.includes(:statuses, :estimates).paginate(page: params[:page])
+    @products = products.includes(:estimates, :tenant, :user).paginate(page: params[:page])
   end
 
   def show

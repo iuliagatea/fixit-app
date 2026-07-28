@@ -1,6 +1,6 @@
 <% obj.each do |o| %>
   <h4><%= o.title %></h4>
-  <h5><small><%= time_ago_in_words(o.created_at) %> ago by <%= user_full_name(User.find(o.user_id)) %> </small> </h5>
+  <h5><small><%= time_ago_in_words(o.created_at) %> ago by <%= user_full_name(o.user) %> </small> </h5>
   <p><%= o.review %></p>
   <% if current_user.id == o.user_id || current_user.is_admin %>
       <%= link_to t('.destroy', :default => t("helpers.links.destroy")),

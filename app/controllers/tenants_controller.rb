@@ -15,7 +15,7 @@ class TenantsController < ApplicationController
   def show
     @categories = @tenant.categories
     @user_review = @tenant.reviews.where(user_id: current_user)
-    @reviews = @user_review.any? ? paginate(@tenant.reviews.order(created_at: :desc), params[:page], 5) : []
+    @reviews = @user_review.any? ? paginate(@tenant.reviews.includes(:user).order(created_at: :desc), params[:page], 5) : []
   end
 
   def update
@@ -23,7 +23,7 @@ class TenantsController < ApplicationController
       Tenant.transaction do
         if @tenant.update(tenant_params)
           if @tenant.plan == 'premium' && @tenant.payment.blank?
-            logger.debugg "Updating plan for tenant #{@tenant.attributes.inspect}"
+            logger.debug "Updating plan for tenant #{@tenant.attributes.inspect}"
             @payment = Payment.new(email: tenant_params['email'],
                                    token: params[:payment]['token'],
                                    tenant: @tenant)

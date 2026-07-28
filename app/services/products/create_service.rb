@@ -40,7 +40,7 @@ module Products
         user.save_and_invite_member
         user.create_member(@member_params)
       end.tap do |user|
-        user.tenants << @tenant unless user.tenants.include?(@tenant)
+        user.tenants << @tenant unless user.tenants.exists?(id: @tenant.id)
       end
     end
   end

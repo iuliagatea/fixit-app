@@ -48,7 +48,7 @@
               </td>
             <% end %>
             <% if current_user.is_admin %>
-              <td class="no-black-hover"><%= link_to product.current_status.name, tenant_status_products_path(status_id: product.current_status.id), title: "View Products with status #{product.current_status.name}" %></td>
+              <td class="no-black-hover"><%= link_to product.current_status.name, tenant_status_products_path(status_id: product.current_status_id), title: "View Products with status #{product.current_status.name}" %></td>
             <% else %>
               <td class="no-black-hover"><%= product.current_status.name %></td>
             <% end%>
