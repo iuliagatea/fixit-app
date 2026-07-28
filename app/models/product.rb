@@ -30,7 +30,9 @@ class Product < ActiveRecord::Base
   after_update_commit :notify_update
 
   def current_status
-    product_statuses.last.status
+    return if current_status_id.blank?
+
+    @current_status ||= Status.find_by(id: current_status_id)
   end
 
   def estimated_value
@@ -39,7 +41,7 @@ class Product < ActiveRecord::Base
 
   def transition_to_status!(new_status, _comment = nil)
     raise ArgumentError, 'Status must be a Status record' unless new_status.is_a?(Status)
-    return if current_status == new_status
+    return if current_status_id == new_status.id
 
     transaction do
       product_statuses.create!(status: new_status)
@@ -53,7 +55,7 @@ class Product < ActiveRecord::Base
   def validate_plan_limit
     return if tenant.blank?
 
-    return unless tenant.plan == 'free' && tenant.products.count >= 500
+    return unless tenant.plan == 'free' && tenant.products.size >= 500
 
     errors.add(:base, 'Free plan limited to 500 products')
   end

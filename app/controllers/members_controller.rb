@@ -12,7 +12,7 @@ class MembersController < ApplicationController
     @user = User.new(user_params)
     if @user.save_and_invite_member && @user.create_member(member_params)
       flash[:notice] = "New member added and invitation email sent to #{@user.email}."
-      logger.debugg "Creating user and sending email #{@user.attributes.inspect}"
+      logger.debug "Creating user and sending email #{@user.attributes.inspect}"
       redirect_to root_path
     else
       flash[:error] = 'errors occurred!'

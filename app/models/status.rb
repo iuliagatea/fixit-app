@@ -8,8 +8,9 @@ class Status < ActiveRecord::Base
   validates_uniqueness_of :name, scope: :tenant_id
 
   def status_products(user)
-    product_statuses.map(&:product).uniq.select do |product|
-      product.current_status.id == id && (product.user_id == user.id || user.is_admin)
-    end
+    Product
+        .where(current_status_id: id)
+        .where('user_id = ? OR ? = true', user.id, user.is_admin)
+        .includes(:estimates, :user, :tenant)
   end
 end

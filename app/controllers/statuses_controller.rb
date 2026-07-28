@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class StatusesController < ApplicationController
-  before_action :find_status, only: %i[show edit update destroy products]
+  before_action :find_status, only: %i[show edit update destroy]
   before_action :verify_tenant
   before_action :verify_user, except: [:products]
 
@@ -48,6 +48,7 @@ class StatusesController < ApplicationController
 
   def products
     logger.debug "Showing products with statuses for tenant #{current_user.email}"
+    @status = Status.find(params[:status_id])
     @products = paginate(@status.status_products(current_user), params[:page])
   end
 
