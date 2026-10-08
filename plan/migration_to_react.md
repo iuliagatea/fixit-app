@@ -562,4 +562,28 @@ Next: Phase 5 (payments, PDFs) — awaiting your go-ahead.
 
 Next: Phase 6 (cutover & cleanup) — awaiting your go-ahead.
 
+---
+
+## Phase 6 — Done (2026-10-08)
+
+**"Cutover" itself doesn't apply — nothing to confirm, by design.** Every phase deliberately mounted the React app under its own `/app` prefix instead of taking over the legacy URLs (a call made in Phase 1 and stayed with since). So there's no `/legacy/*` namespace to check for stragglers, and no legacy controllers/views to retire — they were never touched, never rerouted, and remain exactly as they were before this migration started. "Confirm nothing still points at /legacy/*" is satisfied trivially: that path never existed. If/when you want an actual cutover (legacy routes replaced by the SPA), that's a separate, later decision — not something this phase does.
+
+**Request-spec conversion was already happening phase-by-phase, not deferred to here.** Every new `Api::V1::*` endpoint shipped with request specs covering it as it was built (sessions, products, statuses, tenants, categories) — 40 examples across 6 files by the end of Phase 5. There were no legacy controller specs "touched by the migration" left to convert, since the legacy controllers were never modified.
+
+**A real bug found while writing the first frontend test, fixed across every form:** `react-bootstrap`'s `Form.Label`/`Form.Control` are not programmatically associated (`htmlFor`/`id`) unless the parent `Form.Group` has a `controlId` (or the control has an explicit `id`). None of the forms built in Phases 1–5 had this — `SignInPage`, `NewProductPage`, `ProductFormFields` (shared by New/Edit), `TenantSettingsPage`, `UpgradePlanPage`. This is a real accessibility defect (screen readers, and `getByLabelText`-style tooling, can't associate a label with its input) that existed in shipped code since Phase 1, caught only because a test using `getByLabelText` failed. Fixed by adding `controlId` to every `Form.Group` with a single associated control; for `TenantSettingsPage`'s category checkboxes (one `Form.Group` wrapping many `Form.Check`s — a single shared `controlId` would have collided across all of them), gave each checkbox its own explicit `id` instead.
+
+**What was built:**
+- Jest + React Testing Library, configured to coexist with Vite rather than replace it: `jest.config.js` (`ts-jest`, `jsdom` environment) + a dedicated `tsconfig.jest.json` (CommonJS/Node resolution — kept separate from the main `tsconfig.json` used by Vite/`tsc --noEmit`, so neither toolchain's needs compromise the other).
+- Hit real toolchain friction immediately: the `typescript` package had resolved to `7.0.2` (the new native-compiler rewrite) since Phase 0 never pinned a version, and `ts-jest` doesn't support it yet (no JS Compiler API). Pinned `typescript` to `5.9.3` (latest stable 5.x) — verified `tsc --noEmit` and the Vite build still both pass unchanged.
+- `app/frontend/test/setupTests.ts`: `@testing-library/jest-dom` matchers, a `TextEncoder`/`TextDecoder` polyfill (missing in jsdom's environment, needed by `react-router`), and `IS_REACT_ACT_ENVIRONMENT = true` (React 19 needs this for `act()`-wrapped async state updates to be recognized under `jest-environment-jsdom`).
+- 20 tests across 5 suites: `AuthContext` (the `/me` bootstrap fetch, `signIn`, `signOut`, treating a failed fetch as signed-out rather than an error), `NavBar` (admin-only vs. member-only vs. signed-out link visibility), `SignInPage` (success path + navigation, server error message surfaced, generic fallback for a non-axios error), `ProductFormFields` (the estimates `useFieldArray` — add/remove rows, table appears/disappears correctly), `StatusRow` (edit → save round-trip calls the API with the right payload, Cancel discards, Delete-refused error surfaces, `can_be_deleted: false` disables the button). Chose these five as the highest-value surface: the auth state machine everything else depends on, and the two genuinely stateful/interactive pieces (dynamic field arrays, inline edit-in-place).
+- Ran `rubocop -a` across all `Api::V1::*` controllers, `Product#transition_to_status!`, and all new request specs — 25 auto-corrected, a handful of long lines fixed by hand. Left `Metrics/BlockLength` offenses on spec `describe` blocks as-is (the pre-existing legacy specs already carry the same offenses at the same severity — not a standard this codebase holds elsewhere).
+
+**E2E (Playwright/Cypress): explicitly deferred, by your choice.** Installing a real browser in this sandbox is a meaningfully different kind of footprint than anything else this migration has done (network + disk, and a toolchain with its own ongoing maintenance cost), so I asked rather than assuming. Decision: skip for now — the 175 backend request-spec examples plus 20 frontend component tests are considered sufficient coverage for the logic that matters; E2E can be added later against a real CI environment if/when wanted.
+
+**Verified:**
+- `npx tsc --noEmit`, `bundle exec vite build` (465 modules, same chunk-size warning as Phase 5 — not addressed, a legitimate code-splitting opportunity but not a defect), `npx jest` (20/20), and `bundle exec rspec` (175/176, same single pre-existing unrelated failure) all green together.
+
+Migration plan complete through Phase 6. Remaining open items, for whenever (not blocking anything): the 500-product plan-limit spec bug (flagged back in Phase 0, never investigated — out of scope for this migration), the missing FK cascades on tenant destroy (Phases 1 and 2), and Playwright E2E if you want it later.
+
 

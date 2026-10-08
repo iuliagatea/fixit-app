@@ -64,7 +64,7 @@ module Api
 
       def product_params
         params.require(:product).permit(:code, :name, :expected_completion_date, :comments,
-                                         estimates_attributes: %i[id name quantity price _destroy])
+                                        estimates_attributes: %i[id name quantity price _destroy])
       end
 
       def user_params

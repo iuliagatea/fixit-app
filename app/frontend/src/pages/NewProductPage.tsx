@@ -80,16 +80,16 @@ export function NewProductPage() {
       {submitError && <Alert variant="danger">{submitError}</Alert>}
       <FormProvider {...methods}>
         <Form onSubmit={methods.handleSubmit((values) => mutation.mutate(values))}>
-          <Form.Group className="mb-3">
+          <Form.Group className="mb-3" controlId="newProductCustomerEmail">
             <Form.Label>Customer email</Form.Label>
             <Form.Control {...methods.register('email')} isInvalid={!!methods.formState.errors.email} />
             <Form.Control.Feedback type="invalid">{methods.formState.errors.email?.message}</Form.Control.Feedback>
           </Form.Group>
-          <Form.Group className="mb-3">
+          <Form.Group className="mb-3" controlId="newProductCustomerFirstName">
             <Form.Label>New customer first name (only needed if they don't exist yet)</Form.Label>
             <Form.Control {...methods.register('first_name')} />
           </Form.Group>
-          <Form.Group className="mb-3">
+          <Form.Group className="mb-3" controlId="newProductCustomerLastName">
             <Form.Label>New customer last name</Form.Label>
             <Form.Control {...methods.register('last_name')} />
           </Form.Group>

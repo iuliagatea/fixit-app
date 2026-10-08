@@ -56,11 +56,13 @@ function UpgradeForm() {
   return (
     <Form onSubmit={handleSubmit}>
       {error && <Alert variant="danger">{error}</Alert>}
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-3" controlId="upgradeBillingEmail">
         <Form.Label>Billing email</Form.Label>
         <Form.Control type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
       </Form.Group>
       <Form.Group className="mb-3">
+        {/* No controlId here — Stripe's CardElement renders into its own
+            iframe, so there's no real input id for a label to point at. */}
         <Form.Label>Card details</Form.Label>
         <div className="form-control" style={{ paddingTop: 10, paddingBottom: 10 }}>
           <CardElement />

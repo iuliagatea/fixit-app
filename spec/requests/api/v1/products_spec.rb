@@ -110,7 +110,9 @@ RSpec.describe 'Api::V1::Products', type: :request do
 
       expect do
         post "/api/v1/tenants/#{tenant.id}/products",
-             params: create_params.merge(user: { email: existing_customer.email }, member: { first_name: '', last_name: '' }),
+             params: create_params.merge(user: { email: existing_customer.email },
+                                         member: { first_name: '',
+                                                   last_name: '' }),
              as: :json
       end.to change(Product, :count).by(1).and change(User, :count).by(0)
 
@@ -127,7 +129,7 @@ RSpec.describe 'Api::V1::Products', type: :request do
       expect do
         post "/api/v1/tenants/#{tenant.id}/products",
              params: create_params.merge(user: { email: 'new-customer@example.com' },
-                                          member: { first_name: 'Jane', last_name: 'Doe' }),
+                                         member: { first_name: 'Jane', last_name: 'Doe' }),
              as: :json
       end.to change(User, :count).by(1).and change(Member, :count).by(1).and change(Product, :count).by(1)
 

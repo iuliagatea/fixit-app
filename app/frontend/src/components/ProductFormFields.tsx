@@ -25,17 +25,17 @@ export function ProductFormFields({ statuses }: Props) {
 
   return (
     <>
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-3" controlId="productCode">
         <Form.Label>Code</Form.Label>
         <Form.Control {...register('code')} isInvalid={!!errors.code} />
         <Form.Control.Feedback type="invalid">{errors.code?.message}</Form.Control.Feedback>
       </Form.Group>
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-3" controlId="productName">
         <Form.Label>Name</Form.Label>
         <Form.Control {...register('name')} isInvalid={!!errors.name} />
         <Form.Control.Feedback type="invalid">{errors.name?.message}</Form.Control.Feedback>
       </Form.Group>
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-3" controlId="productExpectedCompletionDate">
         <Form.Label>Expected completion date</Form.Label>
         <Form.Control
           type="date"
@@ -44,11 +44,11 @@ export function ProductFormFields({ statuses }: Props) {
         />
         <Form.Control.Feedback type="invalid">{errors.expected_completion_date?.message}</Form.Control.Feedback>
       </Form.Group>
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-3" controlId="productComments">
         <Form.Label>Comments</Form.Label>
         <Form.Control as="textarea" rows={3} {...register('comments')} />
       </Form.Group>
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-3" controlId="productStatusId">
         <Form.Label>Status</Form.Label>
         <Form.Select {...register('status_id', { valueAsNumber: true })} isInvalid={!!errors.status_id}>
           <option value={0}>Select a status…</option>

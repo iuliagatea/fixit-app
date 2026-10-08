@@ -66,11 +66,11 @@ export function TenantSettingsPage() {
           mutation.mutate()
         }}
       >
-        <Form.Group className="mb-3">
+        <Form.Group className="mb-3" controlId="tenantSettingsName">
           <Form.Label>Organization</Form.Label>
           <Form.Control value={profile.name} disabled />
         </Form.Group>
-        <Form.Group className="mb-3">
+        <Form.Group className="mb-3" controlId="tenantSettingsDescription">
           <Form.Label>Description</Form.Label>
           <Form.Control
             as="textarea"
@@ -79,7 +79,7 @@ export function TenantSettingsPage() {
             onChange={(event) => setDescription(event.target.value)}
           />
         </Form.Group>
-        <Form.Group className="mb-3">
+        <Form.Group className="mb-3" controlId="tenantSettingsKeywords">
           <Form.Label>Keywords</Form.Label>
           <Form.Control as="textarea" rows={2} value={keywords} onChange={(event) => setKeywords(event.target.value)} />
         </Form.Group>
@@ -88,6 +88,7 @@ export function TenantSettingsPage() {
           {categories.map((category) => (
             <Form.Check
               key={category.id}
+              id={`tenantSettingsCategory-${category.id}`}
               type="checkbox"
               label={category.name}
               checked={categoryIds.includes(category.id)}

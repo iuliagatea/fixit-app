@@ -52,11 +52,11 @@ module Api
         Tenant.transaction do
           @tenant.plan = 'premium'
 
-          if @tenant.save
-            result = process_upgrade_payment
-          else
-            result = { ok: false, message: @tenant.errors.full_messages.join(', ') }
-          end
+          result = if @tenant.save
+                     process_upgrade_payment
+                   else
+                     { ok: false, message: @tenant.errors.full_messages.join(', ') }
+                   end
         end
 
         result

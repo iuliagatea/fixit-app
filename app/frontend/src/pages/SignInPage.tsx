@@ -33,7 +33,7 @@ export function SignInPage() {
     <Form onSubmit={handleSubmit} style={{ maxWidth: 360, margin: '4rem auto' }}>
       <h1 className="h4 mb-4">Sign in</h1>
       {error && <Alert variant="danger">{error}</Alert>}
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-3" controlId="signInEmail">
         <Form.Label>Email</Form.Label>
         <Form.Control
           type="email"
@@ -42,7 +42,7 @@ export function SignInPage() {
           required
         />
       </Form.Group>
-      <Form.Group className="mb-3">
+      <Form.Group className="mb-3" controlId="signInPassword">
         <Form.Label>Password</Form.Label>
         <Form.Control
           type="password"

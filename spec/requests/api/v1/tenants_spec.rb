@@ -51,7 +51,7 @@ RSpec.describe 'Api::V1::Tenants', type: :request do
 
       patch "/api/v1/tenants/#{tenant.id}",
             params: { tenant: { description: 'New description', keywords: 'repairs, plumbing',
-                                 category_ids: [category.id] } }, as: :json
+                                category_ids: [category.id] } }, as: :json
 
       expect(response).to have_http_status(:ok)
       body = response.parsed_body
@@ -81,10 +81,10 @@ RSpec.describe 'Api::V1::Tenants', type: :request do
     it 'upgrades the plan and persists a payment when Stripe succeeds' do
       allow_any_instance_of(Payment).to receive(:process_payment).and_return(true)
       sign_in_as(admin_user)
+      payment_params = { payment: { email: admin_user.email, token: 'tok_visa' } }
 
       expect do
-        post "/api/v1/tenants/#{tenant.id}/upgrade", params: { payment: { email: admin_user.email, token: 'tok_visa' } },
-                                                      as: :json
+        post "/api/v1/tenants/#{tenant.id}/upgrade", params: payment_params, as: :json
       end.to change(Payment, :count).by(1)
 
       expect(response).to have_http_status(:ok)
@@ -93,12 +93,13 @@ RSpec.describe 'Api::V1::Tenants', type: :request do
     end
 
     it 'reverts the plan and discards the payment when Stripe fails' do
-      allow_any_instance_of(Payment).to receive(:process_payment).and_raise(Stripe::CardError.new('Your card was declined.', nil))
+      card_error = Stripe::CardError.new('Your card was declined.', nil)
+      allow_any_instance_of(Payment).to receive(:process_payment).and_raise(card_error)
       sign_in_as(admin_user)
+      payment_params = { payment: { email: admin_user.email, token: 'tok_chargeDeclined' } }
 
       expect do
-        post "/api/v1/tenants/#{tenant.id}/upgrade", params: { payment: { email: admin_user.email, token: 'tok_chargeDeclined' } },
-                                                      as: :json
+        post "/api/v1/tenants/#{tenant.id}/upgrade", params: payment_params, as: :json
       end.not_to change(Payment, :count)
 
       expect(response).to have_http_status(:unprocessable_entity)
@@ -112,9 +113,9 @@ RSpec.describe 'Api::V1::Tenants', type: :request do
       premium_admin = create(:user, :admin, password: password, password_confirmation: password)
       premium_admin.confirm
       sign_in_as(premium_admin)
+      payment_params = { payment: { email: premium_admin.email, token: 'tok_visa' } }
 
-      post "/api/v1/tenants/#{premium_tenant.id}/upgrade", params: { payment: { email: premium_admin.email, token: 'tok_visa' } },
-                                                            as: :json
+      post "/api/v1/tenants/#{premium_tenant.id}/upgrade", params: payment_params, as: :json
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.parsed_body['error']['code']).to eq('already_upgraded')
@@ -124,7 +125,7 @@ RSpec.describe 'Api::V1::Tenants', type: :request do
       sign_in_as(customer)
 
       post "/api/v1/tenants/#{tenant.id}/upgrade", params: { payment: { email: customer.email, token: 'tok_visa' } },
-                                                    as: :json
+                                                   as: :json
 
       expect(response).to have_http_status(:forbidden)
     end
