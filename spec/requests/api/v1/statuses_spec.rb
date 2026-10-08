@@ -31,19 +31,32 @@ RSpec.describe 'Api::V1::Statuses', type: :request do
       get "/api/v1/tenants/#{tenant.id}/statuses", as: :json
 
       expect(response).to have_http_status(:ok)
-      names = response.parsed_body.pluck('name')
+      body = response.parsed_body
+      names = body.pluck('name')
       expect(names).to include('Received', 'In progress', 'Completed', 'Canceled', 'Waiting')
+      expect(body.first).to include('send_email')
     end
   end
 
   describe 'POST /api/v1/tenants/:tenant_id/statuses' do
-    it 'creates a new status for an admin' do
+    it 'creates a new status for an admin, including the send_email flag' do
+      sign_in_as(admin_user)
+
+      post "/api/v1/tenants/#{tenant.id}/statuses",
+           params: { status: { name: 'On hold', color: '#ffffff', send_email: false } }, as: :json
+
+      expect(response).to have_http_status(:created)
+      body = response.parsed_body
+      expect(body['name']).to eq('On hold')
+      expect(body['send_email']).to be false
+    end
+
+    it 'defaults send_email to true when not specified (matches the column default)' do
       sign_in_as(admin_user)
 
       post "/api/v1/tenants/#{tenant.id}/statuses", params: { status: { name: 'On hold', color: '#ffffff' } }, as: :json
 
-      expect(response).to have_http_status(:created)
-      expect(response.parsed_body['name']).to eq('On hold')
+      expect(response.parsed_body['send_email']).to be true
     end
 
     it 'rejects a non-admin' do
@@ -64,6 +77,17 @@ RSpec.describe 'Api::V1::Statuses', type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body['name']).to eq('On hold')
+    end
+
+    it 'toggles the send_email flag' do
+      status = tenant.statuses.find_by(name: 'Waiting')
+      sign_in_as(admin_user)
+
+      patch "/api/v1/tenants/#{tenant.id}/statuses/#{status.id}", params: { status: { send_email: false } }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['send_email']).to be false
+      expect(status.reload.send_email).to be false
     end
   end
 

@@ -13,7 +13,14 @@ jest.mock('../api/statuses', () => ({
 const mockUpdateStatus = updateStatus as jest.Mock
 const mockDeleteStatus = deleteStatus as jest.Mock
 
-const baseStatus: StatusDetail = { id: 1, name: 'Received', color: '#428bca', is_active: true, can_be_deleted: true }
+const baseStatus: StatusDetail = {
+  id: 1,
+  name: 'Received',
+  color: '#428bca',
+  is_active: true,
+  can_be_deleted: true,
+  send_email: true,
+}
 
 function renderRow(overrides: Partial<StatusDetail> = {}) {
   const queryClient = new QueryClient()
@@ -33,11 +40,18 @@ describe('StatusRow', () => {
     jest.clearAllMocks()
   })
 
-  it('shows the status name and active state', () => {
+  it('shows the status name, active state, and email flag', () => {
     renderRow()
 
     expect(screen.getByText('Received')).toBeInTheDocument()
     expect(screen.getByText('Active')).toBeInTheDocument()
+    expect(screen.getByText('Emails customer')).toBeInTheDocument()
+  })
+
+  it('shows "Silent" when send_email is false', () => {
+    renderRow({ send_email: false })
+
+    expect(screen.getByText('Silent')).toBeInTheDocument()
   })
 
   it('disables Delete when the status cannot be deleted', () => {
@@ -56,8 +70,23 @@ describe('StatusRow', () => {
     await userEvent.type(nameInput, 'On hold')
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
-    await waitFor(() => expect(mockUpdateStatus).toHaveBeenCalledWith(1, 1, { name: 'On hold', color: '#428bca' }))
+    await waitFor(() =>
+      expect(mockUpdateStatus).toHaveBeenCalledWith(1, 1, { name: 'On hold', color: '#428bca', send_email: true }),
+    )
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument())
+  })
+
+  it('toggles the send_email checkbox while editing', async () => {
+    mockUpdateStatus.mockResolvedValue({ ...baseStatus, send_email: false })
+    renderRow()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    await userEvent.click(screen.getByLabelText('Email customer on this status'))
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() =>
+      expect(mockUpdateStatus).toHaveBeenCalledWith(1, 1, { name: 'Received', color: '#428bca', send_email: false }),
+    )
   })
 
   it('leaves edit mode without saving when Cancel is clicked', async () => {

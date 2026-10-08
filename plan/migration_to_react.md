@@ -648,4 +648,18 @@ The products list already showed customer email (previous change); this extends 
 - `npx tsc --noEmit` and a clean production build both pass.
 - Live end-to-end against the real dev server: created one customer with a `Member` profile and one without, confirmed both render correctly via real HTTP requests to `/api/v1/tenants/:id/products/:id` (`first_name`/`last_name` populated vs. both `null`).
 
+---
+
+## Statuses: expose and edit send_email (2026-10-08)
+
+`Status#send_email` (controls whether `Product#transition_to_status!` fires a customer notification email when a product moves to that status — see `Products::UpdatedNotificationJob`) existed in the schema and model since before the migration started, but `Api::V1::StatusesController` never permitted or rendered it. Exposed it: `status_params` now permits `:send_email`, `status_admin_json` renders it, `StatusesAdminPage`'s table shows an "Emails customer" / "Silent" badge per status, and `StatusRow`'s inline edit mode (plus the "Add a status" form) gained a checkbox for it.
+
+**Found and fixed a real pre-existing bug while writing the update spec, unrelated to `send_email` itself but directly blocking it:** `spec/factories/tenant.rb` had `after(:create, &:create_statuses)` — but `Tenant` already has its own `after_create :create_statuses` model callback, so every tenant built via the factory got its 5 default statuses created **twice** (10 rows, 2 of each name, silently, for every single test in the suite). This only surfaced because a same-name status update (`send_email` toggled, `name` left unchanged) is the first test to update a status without also renaming it — `validates_uniqueness_of :name, scope: :tenant_id` then correctly found the *other* duplicate row and rejected the "unchanged" name as taken. Removed the redundant factory line; confirmed via `rails runner` that a factory-built tenant now gets exactly 5 statuses (it was 10), and reconfirmed live against a real (non-factory) tenant that a same-name update now succeeds.
+
+**Verified:**
+- `bundle exec rspec` — 183 examples (2 new: send_email on create, defaulting to true when omitted; 1 on update), same single pre-existing unrelated failure. Full suite re-run after the factory fix to confirm removing the duplicate statuses didn't silently break any test that happened to depend on them (it didn't).
+- `npx jest` — 38/38 (3 new: the email/silent badge, and toggling the checkbox while editing).
+- `npx tsc --noEmit` and a clean production build both pass.
+- Live end-to-end against the real dev server: confirmed `send_email` defaults to `true` for the 5 seeded statuses on a *real* (non-factory) tenant, created a status with `send_email: false`, and — the specific case that was broken — updated the "Waiting" status's `send_email` flag without changing its name and confirmed it now succeeds.
+
 

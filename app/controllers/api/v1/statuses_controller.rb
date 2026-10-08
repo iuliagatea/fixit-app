@@ -63,7 +63,7 @@ module Api
       end
 
       def status_params
-        params.require(:status).permit(:name, :color, :is_active)
+        params.require(:status).permit(:name, :color, :is_active, :send_email)
       end
 
       def status_admin_json(status)
@@ -72,7 +72,8 @@ module Api
           name: status.name,
           color: status.color,
           is_active: status.is_active,
-          can_be_deleted: status.can_be_deleted
+          can_be_deleted: status.can_be_deleted,
+          send_email: status.send_email
         }
       end
 

@@ -13,6 +13,7 @@ export function StatusesAdminPage() {
   const queryClient = useQueryClient()
   const [name, setName] = useState('')
   const [color, setColor] = useState('#428bca')
+  const [sendEmail, setSendEmail] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const { data: statuses, isLoading } = useQuery({
@@ -22,7 +23,7 @@ export function StatusesAdminPage() {
   })
 
   const createMutation = useMutation({
-    mutationFn: () => createStatus(tenant!.id, { name, color }),
+    mutationFn: () => createStatus(tenant!.id, { name, color, send_email: sendEmail }),
     onSuccess: () => {
       setName('')
       setError(null)
@@ -51,6 +52,7 @@ export function StatusesAdminPage() {
             <tr className="text-secondary small text-uppercase">
               <th className="fw-semibold ps-3">Name</th>
               <th className="fw-semibold">Active</th>
+              <th className="fw-semibold">Email</th>
               <th className="pe-3" />
             </tr>
           </thead>
@@ -92,6 +94,13 @@ export function StatusesAdminPage() {
                 style={{ maxWidth: 60 }}
               />
             </Form.Group>
+            <Form.Check
+              id="newStatusSendEmail"
+              type="checkbox"
+              label="Email customer on this status"
+              checked={sendEmail}
+              onChange={(event) => setSendEmail(event.target.checked)}
+            />
             <Button type="submit" disabled={createMutation.isPending}>
               Add status
             </Button>

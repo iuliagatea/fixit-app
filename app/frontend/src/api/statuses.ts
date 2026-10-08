@@ -10,12 +10,14 @@ export interface StatusOption {
 export interface StatusDetail extends StatusOption {
   is_active: boolean
   can_be_deleted: boolean
+  send_email: boolean
 }
 
 export interface StatusPayload {
   name: string
   color: string
   is_active?: boolean
+  send_email?: boolean
 }
 
 export async function fetchStatuses(tenantId: number): Promise<StatusOption[]> {
