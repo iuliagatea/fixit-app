@@ -19,12 +19,17 @@ class Tenant < ActiveRecord::Base
                   }
   has_and_belongs_to_many :users
   has_many :members, dependent: :destroy
-  has_many :statuses, dependent: :destroy
+  # Declaration order matters: `dependent: :destroy` runs as a
+  # `before_destroy` callback, in the order declared. `products` must be
+  # destroyed (and with it, their `product_statuses` rows) before
+  # `statuses` — otherwise destroying a status whose product_statuses rows
+  # still exist raises PG::ForeignKeyViolation.
   has_many :products, dependent: :destroy
+  has_many :statuses, dependent: :destroy
   has_many :estimates, dependent: :destroy
-  has_many :tenant_categories
+  has_many :tenant_categories, dependent: :destroy
   has_many :categories, through: :tenant_categories
-  has_one :payment
+  has_one :payment, dependent: :destroy
   has_many :reviews, dependent: :destroy
   accepts_nested_attributes_for :payment
   validates_presence_of :name

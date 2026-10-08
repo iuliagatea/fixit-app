@@ -584,6 +584,18 @@ Next: Phase 6 (cutover & cleanup) — awaiting your go-ahead.
 **Verified:**
 - `npx tsc --noEmit`, `bundle exec vite build` (465 modules, same chunk-size warning as Phase 5 — not addressed, a legitimate code-splitting opportunity but not a defect), `npx jest` (20/20), and `bundle exec rspec` (175/176, same single pre-existing unrelated failure) all green together.
 
-Migration plan complete through Phase 6. Remaining open items, for whenever (not blocking anything): the 500-product plan-limit spec bug (flagged back in Phase 0, never investigated — out of scope for this migration), the missing FK cascades on tenant destroy (Phases 1 and 2), and Playwright E2E if you want it later.
+Migration plan complete through Phase 6. Remaining open items, for whenever (not blocking anything): the 500-product plan-limit spec bug (flagged back in Phase 0, never investigated — out of scope for this migration), and Playwright E2E if you want it later.
+
+---
+
+## Post-Phase-6 fix: missing FK cascades on tenant destroy (2026-10-08)
+
+Investigated and fixed the two incidental findings flagged during Phases 1 and 2. Root cause turned out to be one subtle thing plus two plain omissions:
+
+- **The real bug**: `dependent: :destroy` registers a `before_destroy` callback, run in **declaration order**. `Tenant` declared `has_many :statuses, dependent: :destroy` *before* `has_many :products, dependent: :destroy` — so on `tenant.destroy`, every status got destroyed while the tenant's products (and their `product_statuses` rows, which reference those statuses) still existed, raising `PG::ForeignKeyViolation` on `product_statuses.status_id`. Verified empirically (reproduced the exact error, confirmed destroying a product first cleans up its own `product_statuses` rows correctly) before touching anything — this wasn't a guess. Fixed by reordering: `products` now declared (and thus destroyed) before `statuses`.
+- **Two plain missing `dependent` options**: `has_many :tenant_categories` (the Phase 1 finding) and `has_one :payment` (found while verifying the fix — directly relevant since Phase 5 added the code path that creates `Payment` records) had no `dependent: :destroy` at all, so their rows just blocked the tenant delete outright. Both fixed.
+- All three fixes are in `app/models/tenant.rb` alone — no application code outside the model needed to change.
+- Added `spec/models/tenant_spec.rb`'s `#destroy` test: builds a tenant with products+estimates+statuses+product_statuses+categories+payment+reviews all at once and asserts the whole thing destroys cleanly. Verified it actually catches the regression (temporarily reverted the model fix, confirmed the test fails with the exact original error, restored the fix) rather than trusting it blind.
+- `bundle exec rspec`: 176 examples (1 new), same single pre-existing unrelated failure (500-product plan limit) as every phase since it was first found.
 
 
