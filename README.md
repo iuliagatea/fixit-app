@@ -28,40 +28,95 @@ A Rails 7.2 SaaS application that enables service providers (businesses) to mana
 
 ---
 
-### Quick Start
+### Prerequisites
 
-1. **Setup Environment**
-   bin/setup              # Install gems, create DB, seed data
-   yarn install           # Install JS deps (esbuild/sass pipeline + the React/Vite frontend)
+* **Ruby** 3.1 (developed/tested against 3.1.2 — no `.ruby-version` is pinned; use rbenv/rvm/asdf)
+* **Node.js** 18+ and **Yarn** (tested against Node 26.x)
+* **PostgreSQL** 9.2+
+* **Redis** — required for Sidekiq background jobs (status-change emails, product card emails)
 
-2. **Run Application**
-   bin/dev               # Start everything via Procfile.dev: Rails server, css watcher, esbuild watch, and `vite dev` (React frontend)
-   rails server          # Start Rails server (default: http://localhost:3000)
-   redis-server          # Start Redis for Sidekiq (in separate terminal)
-   pg_ctl -D /usr/local/var/postgres start  # Start PostgreSQL locally (if not using Docker)
+### Build & Run
 
-   Legacy server-rendered pages are at their usual URLs; the React frontend is at `/app` (e.g. `/app/products`), calling the `/api/v1/*` JSON API.
+**1. Install dependencies**
+```bash
+bin/setup              # bundle install + db:setup (create, load schema, seed) + clear logs/tmp
+yarn install            # JS deps: the legacy esbuild/Sass pipeline AND the React/Vite frontend
+```
 
-3. **Run Tests**
-   bundle exec rspec     # Full Rails test suite (models, request specs for /api/v1, etc.)
-   bundle exec rspec spec/controllers/products_controller_spec.rb  # Specific file
-   yarn test             # Frontend Jest/React Testing Library suite
+**2. (Optional) Stripe environment variables** — only needed to actually process a payment (premium plan upgrade, legacy or React); everything else works without these:
+```bash
+export STRIPE_TEST_PUBLISHABLE_KEY=pk_test_...
+export STRIPE_TEST_SECRET_KEY=sk_test_...
+```
 
-4. **Database**
-   bin/rails db:create   # Create database
-   bin/rails db:migrate  # Run pending migrations
-   bin/rails db:seed     # Seed sample data
+**3. Start Postgres and Redis**, if not already running:
+```bash
+pg_ctl -D /usr/local/var/postgres start   # or: brew services start postgresql
+redis-server
+```
 
-6. **Debbugging**
-   Use `rails console` to interact with models and test tenant scoping:
-   ```ruby
-   tenant = Tenant.first
-   user = tenant.users.first
-   Tenant.set_current_tenant(user)
-   Product.all # Should return products scoped to tenant
-   ```
+**4. Run everything together**
+```bash
+bin/dev
+```
+This runs `Procfile.dev` via foreman, starting four processes:
+| Process | What it does |
+|---|---|
+| `web`  | Rails server — http://localhost:3000 |
+| `css`  | Sass watcher for the legacy stylesheets |
+| `js`   | esbuild watcher for the legacy JS pipeline |
+| `vite` | Vite dev server for the React frontend (HMR) |
 
-   Use `byebug` in controllers/services to step through code during requests.
+Once running:
+- **Legacy pages** (server-rendered ERB) — the usual URLs: `/`, `/tenants/...`, `/users/sign_in`, etc.
+- **React frontend** — `/app` (e.g. `/app/products`, `/app/sign-in`), talking to the JSON API at `/api/v1/*`
+
+Prefer to run processes individually instead of `bin/dev`? Only start the ones you actually need:
+```bash
+bin/rails server -p 3000   # always needed
+bin/vite dev                # only if you're touching /app (the React frontend)
+yarn watch:css              # only if you're editing legacy stylesheets
+yarn build --watch          # only if you're editing legacy JS
+```
+
+**5. Database**
+```bash
+bin/rails db:create     # Create database
+bin/rails db:migrate    # Run pending migrations
+bin/rails db:seed       # Seed sample data
+```
+
+### Building for Production
+
+```bash
+RAILS_ENV=production bin/rails assets:precompile
+```
+One command builds everything — `vite_rails` hooks `vite:build` into the standard Rails `assets:precompile` task, alongside the legacy esbuild/Sass build, so the React frontend and the legacy assets are both compiled and ready to serve.
+
+```bash
+RAILS_ENV=production bundle exec puma -t 5:5 -w 3 -b unix:///tmp/puma.sock
+```
+See **Deployment** below for the required environment variables.
+
+### Run Tests
+
+```bash
+bundle exec rspec                                                  # Full Rails test suite (models, request specs for /api/v1, etc.)
+bundle exec rspec spec/controllers/products_controller_spec.rb     # Specific file
+yarn test                                                           # Frontend Jest/React Testing Library suite
+```
+
+### Debugging
+
+Use `rails console` to interact with models and test tenant scoping:
+```ruby
+tenant = Tenant.first
+user = tenant.users.first
+Tenant.set_current_tenant(user)
+Product.all # Should return products scoped to tenant
+```
+
+Use `byebug` in controllers/services to step through code during requests.
 
 ---
 
