@@ -8,8 +8,16 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       get 'ping', to: 'health#ping'
+      post 'sign_in', to: 'sessions#create'
+      delete 'sign_out', to: 'sessions#destroy'
+      get 'me', to: 'sessions#show'
     end
   end
+
+  # React SPA shell (Phase 1+ of the migration, see plan/migration_to_react.md).
+  # React Router owns everything under /app client-side.
+  get 'app', to: 'spa#show'
+  get 'app/*path', to: 'spa#show'
 
   root to: 'home#index'
   resources :categories

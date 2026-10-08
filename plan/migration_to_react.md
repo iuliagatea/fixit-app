@@ -443,3 +443,29 @@ What shipped, and one deliberate deviation from the plan above:
 - `bundle exec rspec`: 140 examples, 8 failures — all in `products_controller_spec.rb` (product creation/count assertions) and one in `product_spec.rb` (500-product plan-limit validation). Confirmed these are pre-existing and unrelated to this change: the only `routes.rb` edit is a block inserted before `root to:`, entirely additive and nowhere near the `resources :tenants do resources :products end` nesting those specs exercise; nothing else touched here (Gemfile, package.json, new files) comes near `ProductsController#create`, `Member`, or `Product` validation code. Not fixed as part of this phase — out of scope for the migration work itself.
 
 Next: Phase 1 (auth & shell) — awaiting your go-ahead.
+
+---
+
+## Phase 1 — Done (2026-10-08)
+
+**Scope cut, flagged up front:** The plan listed "SignIn, SignUp, Confirm, Password Reset" as Phase 1 React pages. I implemented **SignIn fully** (real JSON API + React page, matching the Phase 1 checkpoint: "can sign in via the React UI and hit an authenticated API endpoint"). SignUp/Confirm/ResetPassword are thin stub pages that link back to the existing legacy Devise pages, rather than reimplemented in React now — SignUp in particular is entangled with tenant creation + Stripe payment (`RegistrationsController#create`), which is genuinely Phase 3/5 scope, not shell/auth scope. Rebuilding that transactional logic now just to have a React form would be premature. Say if you want it pulled forward.
+
+**What was built:**
+- `app/controllers/api/v1/sessions_controller.rb` — `create` (sign in with email/password via `User.find_for_database_authentication` + `valid_password?`), `destroy` (sign out), `show` (current user + tenant). Routes: `POST /api/v1/sign_in`, `DELETE /api/v1/sign_out`, `GET /api/v1/me`.
+- `app/controllers/spa_controller.rb` + `app/views/layouts/spa.html.erb` + `app/views/spa/show.html.erb` — the real SPA shell, mounted at `GET /app` and `GET /app/*path` (React Router owns everything under `/app` client-side). This **replaces** the Phase 0 `vite_smoke_test` scaffolding, which is now deleted.
+- `app/frontend/src/`: `api/client.ts` (axios instance, `withCredentials: true`, CSRF token read from the page's `<meta>` tag), `context/AuthContext.tsx` (fetches `/me` on load, exposes `signIn`/`signOut`), `components/NavBar.tsx`, `components/LegacyRedirectNotice.tsx` (shared by the three stub pages), `pages/{SignInPage,SignUpPage,ConfirmPage,ResetPasswordPage,DashboardPage}.tsx`, `App.tsx` (React Router routes + a `RequireAuth` guard redirecting to `/sign-in`).
+- `app/frontend/entrypoints/application.tsx` rewritten to mount `<App />` (replaces the Phase 0 placeholder); now also imports `bootstrap/dist/css/bootstrap.min.css` directly (Vite bundles it) — scoped only to `/app` pages via the separate `spa` layout, doesn't touch the legacy layout/CDN Bootstrap.
+- npm: added `react-router-dom`, `axios`, `react-bootstrap`.
+- `spec/requests/api/v1/sessions_spec.rb` — new request spec covering sign-in (valid/invalid credentials), `/me` (401 when logged out, 200 with correct user/tenant when logged in), and sign-out, using real password authentication (not the Warden test-helper bypass) since that's exactly what the new endpoint does.
+
+**Verified:**
+- `npx tsc --noEmit` and `bundle exec vite build` both pass.
+- `bundle exec rspec` — 145 examples (5 new, all passing), same 8 pre-existing unrelated failures as Phase 0's baseline.
+- Live end-to-end check with `bin/vite dev` + `rails server`: fetched `/app`, extracted the real CSRF token from the rendered page, and drove the full cookie + CSRF-protected flow against `/api/v1/sign_in` → `/api/v1/me` → `/api/v1/sign_out` → `/api/v1/me` (401) with `curl`, using a throwaway tenant/user created and then fully deleted from the dev DB afterward. This exercises the production CSRF path, which the request spec can't (Rails disables forgery protection in the test env).
+- Did not spin up a real browser (no Playwright installed, same as Phase 0) — verification is build + type-check + real HTTP/cookie flow, not actual DOM rendering/click-through of the React forms. Say if you want that extra layer before moving on.
+
+**Incidental finding (not fixed, out of scope):** destroying a `Tenant` that has categories currently raises `PG::ForeignKeyViolation` — `has_many :tenant_categories` on `Tenant` has no `dependent: :destroy`/`dependent: :delete_all`, so the join rows survive and block the delete. Ran into this only because my cleanup script destroyed a tenant; unrelated to the migration work, flagging in case tenant deletion is a path you rely on elsewhere.
+
+Next: Phase 2 (products index/show) — awaiting your go-ahead.
+
+
