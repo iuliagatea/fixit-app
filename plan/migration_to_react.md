@@ -515,4 +515,32 @@ Next: Phase 3 (forms & nested estimates) — awaiting your go-ahead.
 
 Next: Phase 4 (statuses, categories, tenant admin) — awaiting your go-ahead.
 
+---
+
+## Phase 4 — Done (2026-10-08)
+
+**Scope cut on "categories":** the original plan assumed category management would be a normal tenant-admin feature. Reading the legacy code showed otherwise — `CategoriesController` is gated behind a single hardcoded email (`verify_user_email_for_category` checks `current_user.email == 'fixit.app2@gmail.com'`), making it a narrow, platform-level tool, not something real tenant admins use. Migrating that CRUD UI isn't worth it. Phase 4 instead ships a **read-only** `Api::V1::CategoriesController#index` (optionally filtered by `entity`) — just enough to populate the tenant settings form's category checkboxes. Category creation/editing stays on the legacy page, untouched.
+
+**Scope cut on "tenant admin" / plan changes:** the legacy `TenantsController#update` combines profile editing (name/description/keywords/categories) with plan upgrades + inline Stripe payment collection in one form and one action. Since payments are explicitly Phase 5, `Api::V1::TenantsController#update` only permits `:name, :description, :keywords, category_ids: []` — `:plan` is not in the permitted list, so a plan-change attempt is silently ignored (verified below) rather than erroring, and the new settings page links out to the existing `/tenants/:id/plan/edit` for upgrades.
+
+**No tenant-switcher** — consistent with the earlier decision (single-tenant-per-user in practice).
+
+**Real gap found and fixed (in the new code's own path, not retrofitted onto legacy):** the legacy `StatusesController#destroy` has no server-side guard at all — the UI only *hides* the delete button when a status has products or `can_be_deleted: false`, but a direct `DELETE` request would happily remove it, including the hardcoded "Received" default that `Product#initialize_status` looks up by name for every new product. `Api::V1::StatusesController#destroy` now enforces `can_be_deleted? && status_products(current_user).none?` server-side, returning `422` otherwise. Verified live (see below) — deleting "Received" is correctly refused, deleting a fresh custom status succeeds.
+
+**What was built:**
+- `Api::V1::StatusesController` extended from Phase 3's read-only `index` to full CRUD (`create`/`update`/`destroy`) plus `GET .../statuses/:id/products` (the "status board" filter view, reusing `Status#status_products(user)`), admin-gated the same way as legacy (`verify_user` except `index`/`products`).
+- `Api::V1::TenantsController#show`/`#update` — profile fields only (see scope cut above). Uses its own `verify_current_tenant` check rather than the inherited `verify_tenant`, since that helper compares `params[:tenant_id]` and this is a top-level (non-nested) resource keyed on `params[:id]` — reusing `verify_tenant` here would have silently 403'd every request.
+- `Api::V1::CategoriesController#index` — read-only, `?entity=` filter.
+- Refactored `product_json`/`status_json`/`estimate_json`/`pagination_meta` out of `ProductsController` and into `Api::V1::BaseController`, since `StatusesController#products` needed the identical product-list shape — avoids a second copy-paste of that logic. (Caught and fixed a self-inflicted naming collision while doing this: `StatusesController`'s own full status-management JSON shape was briefly also called `status_json`, which would have shadowed the shared embed-shape helper `product_json` calls internally — renamed to `status_admin_json`.)
+- React: `StatusesAdminPage` (+ `StatusRow` component: inline edit/delete per status, new-status form), `StatusBoardPage` (tab-per-status filter view), `TenantSettingsPage` (profile + category checkboxes, plan shown read-only with a link to the legacy upgrade page). Extracted `ProductsTable` (table + pagination) out of `ProductsListPage` since `StatusBoardPage` needed the identical rendering — same dedup rationale as the backend JSON helpers.
+- `spec/requests/api/v1/{statuses,tenants,categories}_spec.rb` — 19 new/extended cases, including the "Received can't be deleted" and "plan change is ignored" assertions.
+
+**Verified:**
+- `npx tsc --noEmit` and `bundle exec vite build` both pass (453 → 460 modules).
+- `bundle exec rspec` — 171 examples, same single unrelated pre-existing failure (500-product plan-limit).
+- Live end-to-end against the real dev server: signed in as a throwaway admin, listed categories, updated the tenant profile (description/keywords/categories) while attempting a plan change in the same request — confirmed the plan stayed `free`; created a status, confirmed deleting "Received" is refused (`422`) while the status board correctly returns its (empty) product list, then deleted the freshly-created deletable status successfully. Cleaned up all throwaway data (including the test category) afterward.
+- Still no real browser/click-through (no Playwright) — same caveat as every phase so far.
+
+Next: Phase 5 (payments, PDFs) — awaiting your go-ahead.
+
 

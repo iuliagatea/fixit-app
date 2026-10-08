@@ -1,0 +1,95 @@
+import { useState } from 'react'
+import { Alert, Button, Form } from 'react-bootstrap'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
+import { deleteStatus, updateStatus } from '../api/statuses'
+import type { StatusDetail } from '../api/statuses'
+
+interface Props {
+  tenantId: number
+  status: StatusDetail
+}
+
+export function StatusRow({ tenantId, status }: Props) {
+  const queryClient = useQueryClient()
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(status.name)
+  const [color, setColor] = useState(status.color)
+  const [error, setError] = useState<string | null>(null)
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['statuses', tenantId] })
+
+  const updateMutation = useMutation({
+    mutationFn: () => updateStatus(tenantId, status.id, { name, color }),
+    onSuccess: () => {
+      setEditing(false)
+      invalidate()
+    },
+    onError: (err) => {
+      const message = axios.isAxiosError(err) ? err.response?.data?.error?.message : null
+      setError(message ?? 'Could not save this status.')
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteStatus(tenantId, status.id),
+    onSuccess: invalidate,
+    onError: (err) => {
+      const message = axios.isAxiosError(err) ? err.response?.data?.error?.message : null
+      setError(message ?? 'Could not delete this status.')
+    },
+  })
+
+  if (editing) {
+    return (
+      <tr>
+        <td colSpan={3}>
+          {error && <Alert variant="danger" className="py-1">{error}</Alert>}
+          <div className="d-flex gap-2 align-items-center">
+            <Form.Control size="sm" value={name} onChange={(e) => setName(e.target.value)} style={{ maxWidth: 200 }} />
+            <Form.Control
+              size="sm"
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              style={{ maxWidth: 60 }}
+            />
+            <Button size="sm" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate()}>
+              Save
+            </Button>
+            <Button size="sm" variant="outline-secondary" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+          </div>
+        </td>
+      </tr>
+    )
+  }
+
+  return (
+    <tr>
+      <td>
+        <span
+          className="d-inline-block me-2"
+          style={{ width: 12, height: 12, backgroundColor: status.color, borderRadius: '50%' }}
+        />
+        {status.name}
+      </td>
+      <td>{status.is_active ? 'Active' : 'Inactive'}</td>
+      <td className="text-end">
+        {error && <Alert variant="danger" className="py-1 mb-1">{error}</Alert>}
+        <Button size="sm" variant="outline-secondary" className="me-2" onClick={() => setEditing(true)}>
+          Edit
+        </Button>
+        <Button
+          size="sm"
+          variant="outline-danger"
+          disabled={!status.can_be_deleted || deleteMutation.isPending}
+          onClick={() => deleteMutation.mutate()}
+        >
+          Delete
+        </Button>
+      </td>
+    </tr>
+  )
+}

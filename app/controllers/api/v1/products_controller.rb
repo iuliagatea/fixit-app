@@ -74,48 +74,6 @@ module Api
       def member_params
         (params[:member] || ActionController::Parameters.new).permit(:first_name, :last_name)
       end
-
-      def product_json(product, include_estimates: false)
-        json = {
-          id: product.id,
-          code: product.code,
-          name: product.name,
-          expected_completion_date: product.expected_completion_date,
-          comments: product.comments,
-          estimated_value: product.estimated_value,
-          tenant_id: product.tenant_id,
-          updated_at: product.updated_at,
-          user: { id: product.user.id, email: product.user.email },
-          current_status: status_json(product.current_status)
-        }
-        json[:estimates] = product.estimates.map { |estimate| estimate_json(estimate) } if include_estimates
-        json
-      end
-
-      def status_json(status)
-        return nil if status.blank?
-
-        { id: status.id, name: status.name, color: status.color }
-      end
-
-      def estimate_json(estimate)
-        {
-          id: estimate.id,
-          name: estimate.name,
-          quantity: estimate.quantity,
-          price: estimate.price,
-          total_value: estimate.total_value
-        }
-      end
-
-      def pagination_meta(paginated)
-        {
-          total_pages: paginated.total_pages,
-          current_page: paginated.current_page,
-          per_page: paginated.per_page,
-          total_entries: paginated.total_entries
-        }
-      end
     end
   end
 end

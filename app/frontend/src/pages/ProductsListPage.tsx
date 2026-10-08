@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Badge, Pagination, Spinner, Table } from 'react-bootstrap'
+import { Spinner } from 'react-bootstrap'
 import { fetchProducts } from '../api/products'
+import { ProductsTable } from '../components/ProductsTable'
 import { useAuth } from '../context/AuthContext'
 
 export function ProductsListPage() {
@@ -29,49 +30,7 @@ export function ProductsListPage() {
           </Link>
         )}
       </div>
-      {data.products.length === 0 ? (
-        <p>No products yet.</p>
-      ) : (
-        <Table striped responsive>
-          <thead>
-            <tr>
-              <th>Code · Name</th>
-              <th>Estimated value</th>
-              <th>Expected completion</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.products.map((product) => (
-              <tr key={product.id}>
-                <td>
-                  <Link to={`/products/${product.id}`}>
-                    {product.code} - {product.name}
-                  </Link>
-                </td>
-                <td>{product.estimated_value}</td>
-                <td>{product.expected_completion_date}</td>
-                <td>
-                  {product.current_status && (
-                    <Badge style={{ backgroundColor: product.current_status.color }}>
-                      {product.current_status.name}
-                    </Badge>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      )}
-      {data.meta.total_pages > 1 && (
-        <Pagination>
-          {Array.from({ length: data.meta.total_pages }, (_, i) => i + 1).map((pageNumber) => (
-            <Pagination.Item key={pageNumber} active={pageNumber === page} onClick={() => setPage(pageNumber)}>
-              {pageNumber}
-            </Pagination.Item>
-          ))}
-        </Pagination>
-      )}
+      <ProductsTable data={data} page={page} onPageChange={setPage} />
     </div>
   )
 }

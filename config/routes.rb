@@ -12,12 +12,16 @@ Rails.application.routes.draw do
       delete 'sign_out', to: 'sessions#destroy'
       get 'me', to: 'sessions#show'
 
-      resources :tenants, only: [] do
+      resources :tenants, only: %i[show update] do
         resources :products, only: %i[index show create update] do
           post 'send_product_card', on: :member
         end
-        resources :statuses, only: %i[index]
+        resources :statuses, only: %i[index create update destroy] do
+          get 'products', on: :member
+        end
       end
+
+      resources :categories, only: %i[index]
     end
   end
 
