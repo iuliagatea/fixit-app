@@ -1,18 +1,25 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { Spinner, Table } from 'react-bootstrap'
-import { fetchProduct } from '../api/products'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Alert, Button, Spinner, Table } from 'react-bootstrap'
+import { fetchProduct, sendProductCard } from '../api/products'
 import { useAuth } from '../context/AuthContext'
 
 export function ProductDetailPage() {
-  const { tenant } = useAuth()
+  const { user, tenant } = useAuth()
   const { id } = useParams()
   const productId = Number(id)
+  const [cardSent, setCardSent] = useState(false)
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['product', tenant?.id, productId],
     queryFn: () => fetchProduct(tenant!.id, productId),
     enabled: Boolean(tenant) && Number.isFinite(productId),
+  })
+
+  const sendCardMutation = useMutation({
+    mutationFn: () => sendProductCard(tenant!.id, productId),
+    onSuccess: () => setCardSent(true),
   })
 
   if (!tenant) return null
@@ -24,13 +31,32 @@ export function ProductDetailPage() {
       <p>
         <Link to="/products">&larr; Back to products</Link>
       </p>
-      <h1 className="h4">
+      <h1 className="h4 d-flex align-items-center gap-2">
         {data.code} - {data.name}
+        {user?.is_admin && (
+          <Link to={`/products/${data.id}/edit`} className="h6 mb-0">
+            Edit
+          </Link>
+        )}
       </h1>
       <p className="mb-1">Status: {data.current_status?.name ?? 'none'}</p>
       <p className="mb-1">Expected completion: {data.expected_completion_date}</p>
       <p className="mb-1">Owner: {data.user.email}</p>
       {data.comments && <p className="mb-3">{data.comments}</p>}
+
+      {user?.is_admin && (
+        <div className="mb-3">
+          {cardSent && <Alert variant="success">Product card sent.</Alert>}
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            disabled={sendCardMutation.isPending}
+            onClick={() => sendCardMutation.mutate()}
+          >
+            {sendCardMutation.isPending ? 'Sending…' : 'Send product card'}
+          </Button>
+        </div>
+      )}
 
       <h2 className="h5">Estimates</h2>
       {data.estimates.length === 0 ? (

@@ -492,4 +492,27 @@ Next: Phase 2 (products index/show) — awaiting your go-ahead.
 
 Next: Phase 3 (forms & nested estimates) — awaiting your go-ahead.
 
+---
+
+## Phase 3 — Done (2026-10-08)
+
+**Real bug found and fixed (in the critical path, not legacy cleanup):** `Product#transition_to_status!`'s guard (`return if current_status_id == new_status.id`) relies on `current_status_id`, which is only populated by `ProductStatus`'s `after_create_commit` hook. `Products::CreateService` calls `transition_to_status!` inside the *same* `Product.transaction do...end` block that creates the product (whose `before_create :initialize_status` already auto-assigns the "Received" status) — so `current_status_id` is still `nil` when the guard runs, and picking "Received" (the obvious, most common choice) as the initial status tries to insert a second `ProductStatus` row for the same status, which hits the model's uniqueness validation and fails the whole create. This is exactly why `products_controller_spec.rb`'s create tests have been in the "pre-existing failures" list since Phase 0 — their test data happens to use `tenant.statuses.first`, i.e. "Received". Fixed in `app/models/product.rb` by checking `product_statuses.exists?(status_id: new_status.id)` instead (sees rows already inserted in the same transaction, doesn't depend on the commit callback). This single fix resolved 7 of the 8 standing pre-existing failures — only the unrelated 500-product plan-limit spec remains.
+
+**What was built:**
+- `Api::V1::ProductsController#create`/`#update`/`#send_product_card` — reuses `Products::CreateService`/`Products::UpdateService` (not reimplemented) so the existing transactional/validation/notification logic stays the single source of truth. `create` accepts `product`, `user: { email }`, `member: { first_name, last_name }` (used only when the email doesn't match an existing tenant customer — same `find_or_create_by` semantics as the legacy flow), and `status_id`. `update` accepts `product` (incl. `estimates_attributes`, reusing `accepts_nested_attributes_for`) and an optional `status_id`. Both scoped behind `verify_user` (admin-only, same as legacy — the nested routes have no `user_id` param so `verify_user` only passes for admins).
+- `Api::V1::StatusesController#index` — read-only, just enough for the form's status picker; full status management stays Phase 4 scope.
+- Routes: `products` gets `create`/`update` + a `POST .../send_product_card` member route; new `statuses` index nested under tenants.
+- React: `ProductFormFields` (shared code/name/date/comments/status-select/estimates-field-array component, `react-hook-form` + `useFieldArray`), `NewProductPage` (adds customer email/first/last name fields) and `EditProductPage` (fetches + `reset()`s the form from the existing product), both validated with a shared `yup` schema (`@hookform/resolvers/yup`). `ProductDetailPage` gained an admin-only Edit link and "Send product card" button; `ProductsListPage` gained an admin-only "New product" link.
+- `spec/requests/api/v1/products_spec.rb` extended with create (existing customer, new customer+member, free-plan-cap 422, non-admin 403) and update (field+status changes, non-admin 403) cases; `spec/requests/api/v1/statuses_spec.rb` added.
+
+**Scope note:** destroy isn't in this phase (matches the plan's own Phase 3 checkpoint: "create/edit product with estimates works end-to-end; product card email still sends" — no mention of delete). Legacy delete is still reachable via `/tenants/:tenant_id/products/:id` if needed.
+
+**Verified:**
+- `npx tsc --noEmit` and `bundle exec vite build` both pass (441 → 453 modules).
+- `bundle exec rspec` — 158 examples, 1 failure (down from 8 — see the bug fix above), same unrelated plan-limit spec as before.
+- Live end-to-end against the real dev server: signed in as a throwaway admin, fetched `/api/v1/tenants/:id/statuses`, created a product **choosing "Received" as the initial status** (the exact case that was broken before the fix) with a brand-new customer email + estimates in one call — got `201` with the new user/member/product/estimates all created correctly; then `PATCH`ed the product (name + status → "In progress") and hit `send_product_card`, confirming the Sidekiq job enqueued without error (needed a local Redis — wasn't running by default in this sandbox). Cleaned up all throwaway data afterward.
+- Still no real browser/click-through of the React form itself (no Playwright) — same caveat as every phase so far; verification here is type-check + build + the full API contract exercised exactly as the form would call it.
+
+Next: Phase 4 (statuses, categories, tenant admin) — awaiting your go-ahead.
+
 

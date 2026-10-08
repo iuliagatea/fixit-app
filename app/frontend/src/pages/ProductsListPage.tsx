@@ -6,7 +6,7 @@ import { fetchProducts } from '../api/products'
 import { useAuth } from '../context/AuthContext'
 
 export function ProductsListPage() {
-  const { tenant } = useAuth()
+  const { user, tenant } = useAuth()
   const [page, setPage] = useState(1)
 
   const { data, isLoading, isError } = useQuery({
@@ -21,7 +21,14 @@ export function ProductsListPage() {
 
   return (
     <div style={{ maxWidth: 960, margin: '2rem auto' }}>
-      <h1 className="h4 mb-3">Products</h1>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h1 className="h4 mb-0">Products</h1>
+        {user?.is_admin && (
+          <Link to="/products/new" className="btn btn-primary btn-sm">
+            New product
+          </Link>
+        )}
+      </div>
       {data.products.length === 0 ? (
         <p>No products yet.</p>
       ) : (

@@ -23,7 +23,7 @@ export interface Estimate {
   id: number
   name: string
   quantity: number
-  price: string
+  price: number
   total_value: string
 }
 
@@ -51,4 +51,50 @@ export async function fetchProducts(tenantId: number, page: number): Promise<Pro
 export async function fetchProduct(tenantId: number, productId: number): Promise<ProductDetail> {
   const { data } = await apiClient.get<ProductDetail>(`/tenants/${tenantId}/products/${productId}`)
   return data
+}
+
+export interface EstimateInput {
+  id?: number
+  name: string
+  quantity: number
+  price: number
+  _destroy?: boolean
+}
+
+export interface ProductPayload {
+  code: string
+  name: string
+  expected_completion_date: string
+  comments?: string
+  estimates_attributes: EstimateInput[]
+}
+
+export interface CreateProductPayload {
+  product: ProductPayload
+  user: { email: string }
+  member?: { first_name: string; last_name: string }
+  status_id: number
+}
+
+export interface UpdateProductPayload {
+  product: Partial<ProductPayload>
+  status_id?: number
+}
+
+export async function createProduct(tenantId: number, payload: CreateProductPayload): Promise<ProductDetail> {
+  const { data } = await apiClient.post<ProductDetail>(`/tenants/${tenantId}/products`, payload)
+  return data
+}
+
+export async function updateProduct(
+  tenantId: number,
+  productId: number,
+  payload: UpdateProductPayload,
+): Promise<ProductDetail> {
+  const { data } = await apiClient.patch<ProductDetail>(`/tenants/${tenantId}/products/${productId}`, payload)
+  return data
+}
+
+export async function sendProductCard(tenantId: number, productId: number): Promise<void> {
+  await apiClient.post(`/tenants/${tenantId}/products/${productId}/send_product_card`)
 }

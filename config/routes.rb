@@ -13,7 +13,10 @@ Rails.application.routes.draw do
       get 'me', to: 'sessions#show'
 
       resources :tenants, only: [] do
-        resources :products, only: %i[index show]
+        resources :products, only: %i[index show create update] do
+          post 'send_product_card', on: :member
+        end
+        resources :statuses, only: %i[index]
       end
     end
   end

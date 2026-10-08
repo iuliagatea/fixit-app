@@ -79,4 +79,119 @@ RSpec.describe 'Api::V1::Products', type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe 'POST /api/v1/tenants/:tenant_id/products' do
+    let(:status_id) { tenant.statuses.find_by(name: 'Received').id }
+    let(:create_params) do
+      {
+        product: {
+          code: 'ABC-123',
+          name: 'New product',
+          expected_completion_date: 1.week.from_now.to_date.to_s,
+          comments: 'Some comments',
+          estimates_attributes: [{ name: 'Labor', quantity: 2, price: 50 }]
+        },
+        status_id: status_id
+      }
+    end
+
+    it 'rejects a non-admin (regular customers cannot create products)' do
+      sign_in_as(customer)
+
+      post "/api/v1/tenants/#{tenant.id}/products",
+           params: create_params.merge(user: { email: customer.email }), as: :json
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it 'creates a product for an existing customer, with estimates' do
+      existing_customer = customer
+      sign_in_as(admin_user)
+
+      expect do
+        post "/api/v1/tenants/#{tenant.id}/products",
+             params: create_params.merge(user: { email: existing_customer.email }, member: { first_name: '', last_name: '' }),
+             as: :json
+      end.to change(Product, :count).by(1).and change(User, :count).by(0)
+
+      expect(response).to have_http_status(:created)
+      body = response.parsed_body
+      expect(body['code']).to eq('ABC-123')
+      expect(body['estimates'].size).to eq(1)
+      expect(body['current_status']['name']).to eq('Received')
+    end
+
+    it 'creates a new customer + member when the email is unknown to the tenant' do
+      sign_in_as(admin_user)
+
+      expect do
+        post "/api/v1/tenants/#{tenant.id}/products",
+             params: create_params.merge(user: { email: 'new-customer@example.com' },
+                                          member: { first_name: 'Jane', last_name: 'Doe' }),
+             as: :json
+      end.to change(User, :count).by(1).and change(Member, :count).by(1).and change(Product, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+    end
+
+    it 'returns 422 when the free-plan product cap is hit' do
+      allow_any_instance_of(Tenant).to receive(:products).and_wrap_original do |method|
+        method.call.tap { |relation| allow(relation).to receive(:size).and_return(500) }
+      end
+      sign_in_as(admin_user)
+
+      post "/api/v1/tenants/#{tenant.id}/products",
+           params: create_params.merge(user: { email: customer.email }), as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']['code']).to eq('create_failed')
+    end
+  end
+
+  describe 'PATCH /api/v1/tenants/:tenant_id/products/:id' do
+    it 'updates product fields and estimates' do
+      product = create(:product, :with_estimates, tenant_id: tenant.id, user: customer)
+      estimate_to_keep = product.estimates.first
+      new_status_id = tenant.statuses.find_by(name: 'In progress').id
+      sign_in_as(admin_user)
+
+      patch "/api/v1/tenants/#{tenant.id}/products/#{product.id}",
+            params: {
+              product: {
+                name: 'Updated name',
+                estimates_attributes: [{ id: estimate_to_keep.id, name: estimate_to_keep.name,
+                                         quantity: estimate_to_keep.quantity, price: estimate_to_keep.price }]
+              },
+              status_id: new_status_id
+            }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body['name']).to eq('Updated name')
+      expect(body['current_status']['name']).to eq('In progress')
+    end
+
+    it 'rejects a non-admin' do
+      product = create(:product, tenant_id: tenant.id, user: customer)
+      sign_in_as(customer)
+
+      patch "/api/v1/tenants/#{tenant.id}/products/#{product.id}",
+            params: { product: { name: 'Hacked' } }, as: :json
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
+  describe 'POST /api/v1/tenants/:tenant_id/products/:id/send_product_card' do
+    it 'enqueues the card email job' do
+      product = create(:product, tenant_id: tenant.id, user: customer)
+      sign_in_as(admin_user)
+
+      expect do
+        post "/api/v1/tenants/#{tenant.id}/products/#{product.id}/send_product_card", as: :json
+      end.to change { Sidekiq::Worker.jobs.size }.by(1)
+
+      expect(response).to have_http_status(:no_content)
+    end
+  end
 end

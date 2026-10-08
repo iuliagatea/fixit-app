@@ -41,7 +41,13 @@ class Product < ActiveRecord::Base
 
   def transition_to_status!(new_status, _comment = nil)
     raise ArgumentError, 'Status must be a Status record' unless new_status.is_a?(Status)
-    return if current_status_id == new_status.id
+    # current_status_id is only set by ProductStatus's after_create_commit hook,
+    # which hasn't fired yet when this runs inside the same transaction as the
+    # product's own creation (e.g. Products::CreateService) — check the
+    # already-inserted rows directly instead, so assigning the same status the
+    # product was just auto-initialized with doesn't violate the uniqueness
+    # validation on product_statuses.
+    return if product_statuses.exists?(status_id: new_status.id)
 
     transaction do
       product_statuses.create!(status: new_status)

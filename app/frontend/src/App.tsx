@@ -4,6 +4,8 @@ import { NavBar } from './components/NavBar'
 import { useAuth } from './context/AuthContext'
 import { ConfirmPage } from './pages/ConfirmPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { EditProductPage } from './pages/EditProductPage'
+import { NewProductPage } from './pages/NewProductPage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
 import { ProductsListPage } from './pages/ProductsListPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -41,10 +43,26 @@ export function App() {
           )}
         />
         <Route
+          path="/products/new"
+          element={(
+            <RequireAuth>
+              <NewProductPage />
+            </RequireAuth>
+          )}
+        />
+        <Route
           path="/products/:id"
           element={(
             <RequireAuth>
               <ProductDetailPage />
+            </RequireAuth>
+          )}
+        />
+        <Route
+          path="/products/:id/edit"
+          element={(
+            <RequireAuth>
+              <EditProductPage />
             </RequireAuth>
           )}
         />
