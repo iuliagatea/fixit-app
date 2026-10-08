@@ -24,3 +24,13 @@ export async function updateTenant(tenantId: number, payload: TenantProfilePaylo
   const { data } = await apiClient.patch<TenantProfile>(`/tenants/${tenantId}`, { tenant: payload })
   return data
 }
+
+export interface UpgradePayload {
+  email: string
+  token: string
+}
+
+export async function upgradeTenant(tenantId: number, payload: UpgradePayload): Promise<TenantProfile> {
+  const { data } = await apiClient.post<TenantProfile>(`/tenants/${tenantId}/upgrade`, { payment: payload })
+  return data
+}

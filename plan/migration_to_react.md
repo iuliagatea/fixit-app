@@ -543,4 +543,23 @@ Next: Phase 4 (statuses, categories, tenant admin) — awaiting your go-ahead.
 
 Next: Phase 5 (payments, PDFs) — awaiting your go-ahead.
 
+---
+
+## Phase 5 — Done (2026-10-08)
+
+**What stayed untouched, deliberately:** `Payment#process_payment` (the actual `Stripe::Customer.create` / `Stripe::Charge.create` calls) was not modified at all. The client-side change is purely the *collection* method — Stripe Elements (`@stripe/react-stripe-js`'s `CardElement`, loaded via the tenant settings layout's new `stripe-publishable-key` meta tag) replaces the legacy page's raw card-number/cvc/expiry text fields, calling `stripe.createToken()` to get a `tok_...` string exactly like the old Stripe.js v2 flow did — the server still just receives a token and forwards it unchanged into the same `Payment` model. This keeps the one piece of code that moves real money completely out of the diff.
+
+**`Api::V1::TenantsController#upgrade`** mirrors the legacy `TenantsController#update` plan-change branch call-for-call: tentatively set `plan = 'premium'`, attempt `Payment#process_payment`, and on any `StandardError` destroy the payment and revert the plan back to `free` — all inside `Tenant.transaction do...end`, same as legacy (which also doesn't rely on `ActiveRecord::Rollback`, just manually unwinds state, so I matched that rather than "improving" it into a stricter transaction). Guards: refuses to run at all if the tenant isn't still on `free` (`already_upgraded`), and `verify_user` keeps it admin-only like legacy's `edit`/`update`.
+
+**PDF**: no new endpoint — `ProductDetailPage` now links straight to the existing `/tenants/:tenant_id/products/:id.pdf` route (wicked_pdf, unchanged), same as the legacy "download" icon.
+
+**Verified, including a real (if unintentional) end-to-end failure-path test:** this sandbox has no `STRIPE_TEST_SECRET_KEY` configured, so hitting `/api/v1/tenants/:id/upgrade` against the real dev server made an actual (unauthenticated) call to the real `Payment#process_payment` path, which raised a genuine `Stripe::AuthenticationError` — caught by the `rescue StandardError`, which destroyed the payment record and reverted the tenant's plan back to `free`, confirmed via a follow-up `GET`. That's stronger evidence than a stub that the revert-on-failure control flow is wired correctly end-to-end, not just syntactically present. The success path (and the "already premium" / non-admin-forbidden guards) are covered by `spec/requests/api/v1/tenants_spec.rb`, which stubs `Payment#process_payment` — I did not acquire or use real Stripe test credentials, and won't; if you want a fully live successful-charge test, that needs your own Stripe test-mode keys set as `STRIPE_TEST_PUBLISHABLE_KEY`/`STRIPE_TEST_SECRET_KEY`.
+- `npx tsc --noEmit` and `bundle exec vite build` both pass (460 → 465 modules; Vite now also warns the main JS chunk is over 500kB after adding Stripe.js — not fixed here, a legitimate code-splitting opportunity better suited to Phase 6 polish than blocking this phase).
+- `bundle exec rspec` — 175 examples (4 new upgrade cases), same single unrelated pre-existing failure.
+- Confirmed PDF download works unchanged via the real dev server.
+
+**Not done — correctly out of scope:** this phase's own stated boundary was payments + PDFs, both done. Full Stripe Elements styling/placeholder customization, webhook handling, and subscription billing (the legacy integration is a one-off `Stripe::Charge`, not a recurring subscription, despite "upgrade to premium" sounding recurring) are not part of this app today and weren't introduced.
+
+Next: Phase 6 (cutover & cleanup) — awaiting your go-ahead.
+
 

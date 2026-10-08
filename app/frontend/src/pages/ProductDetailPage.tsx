@@ -44,9 +44,17 @@ export function ProductDetailPage() {
       <p className="mb-1">Owner: {data.user.email}</p>
       {data.comments && <p className="mb-3">{data.comments}</p>}
 
-      {user?.is_admin && (
-        <div className="mb-3">
-          {cardSent && <Alert variant="success">Product card sent.</Alert>}
+      <div className="mb-3 d-flex gap-2 align-items-center">
+        {/* PDF generation stays server-side (wicked_pdf) — linking straight to the existing route. */}
+        <a
+          href={`/tenants/${data.tenant_id}/products/${data.id}.pdf`}
+          className="btn btn-outline-secondary btn-sm"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Download PDF
+        </a>
+        {user?.is_admin && (
           <Button
             variant="outline-secondary"
             size="sm"
@@ -55,8 +63,9 @@ export function ProductDetailPage() {
           >
             {sendCardMutation.isPending ? 'Sending…' : 'Send product card'}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
+      {cardSent && <Alert variant="success">Product card sent.</Alert>}
 
       <h2 className="h5">Estimates</h2>
       {data.estimates.length === 0 ? (

@@ -14,6 +14,7 @@ import { SignUpPage } from './pages/SignUpPage'
 import { StatusBoardPage } from './pages/StatusBoardPage'
 import { StatusesAdminPage } from './pages/StatusesAdminPage'
 import { TenantSettingsPage } from './pages/TenantSettingsPage'
+import { UpgradePlanPage } from './pages/UpgradePlanPage'
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -100,6 +101,14 @@ export function App() {
           element={(
             <RequireAdmin>
               <TenantSettingsPage />
+            </RequireAdmin>
+          )}
+        />
+        <Route
+          path="/upgrade"
+          element={(
+            <RequireAdmin>
+              <UpgradePlanPage />
             </RequireAdmin>
           )}
         />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Alert, Button, Form, Spinner } from 'react-bootstrap'
 import axios from 'axios'
@@ -101,8 +102,8 @@ export function TenantSettingsPage() {
 
       <hr className="my-4" />
       <p className="text-muted mb-0">
-        Current plan: <strong>{profile.plan}</strong>. Plan upgrades aren't available here yet —{' '}
-        <a href={`/tenants/${tenant.id}/plan/edit`}>use the existing plan page</a>.
+        Current plan: <strong>{profile.plan}</strong>.{' '}
+        {profile.plan === 'free' && <Link to="/upgrade">Upgrade to Premium</Link>}
       </p>
     </div>
   )
