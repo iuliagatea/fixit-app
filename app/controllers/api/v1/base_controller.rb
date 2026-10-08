@@ -4,6 +4,13 @@ module Api
   module V1
     class BaseController < ApplicationController
       rescue_from ActionController::InvalidAuthenticityToken, with: :render_invalid_csrf
+      # ApplicationController registers `rescue_from StandardError` after
+      # `rescue_from ActiveRecord::RecordNotFound`, and Rails matches
+      # rescue_from handlers in reverse-registration order — so inherited,
+      # RecordNotFound is actually caught by the generic 500 handler, not
+      # `not_found`. Re-registering it here (appended after both, in this
+      # subclass) puts it first in the search order for API controllers.
+      rescue_from ActiveRecord::RecordNotFound, with: :not_found
 
       private
 

@@ -11,6 +11,10 @@ Rails.application.routes.draw do
       post 'sign_in', to: 'sessions#create'
       delete 'sign_out', to: 'sessions#destroy'
       get 'me', to: 'sessions#show'
+
+      resources :tenants, only: [] do
+        resources :products, only: %i[index show]
+      end
     end
   end
 

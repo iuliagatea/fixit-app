@@ -468,4 +468,28 @@ Next: Phase 1 (auth & shell) — awaiting your go-ahead.
 
 Next: Phase 2 (products index/show) — awaiting your go-ahead.
 
+---
+
+## Phase 2 — Done (2026-10-08)
+
+**Routing decision, consistent with Phase 1:** the plan's original "routing strategy" section (written before any phase was implemented) assumed React pages would take over the legacy URLs directly, with old controllers/views moved to `/legacy/...`. Phase 1 already deviated from that — the SPA lives at a net-new `/app` prefix instead of colliding with existing URLs, to keep risk low. Phase 2 keeps that same pattern: product pages are `/app/products` and `/app/products/:id`, not a takeover of `/tenants/:tenant_id/products`. The legacy `ProductsController` and its views are completely untouched.
+
+**What was built:**
+- `app/controllers/api/v1/products_controller.rb` — `GET /api/v1/tenants/:tenant_id/products` (paginated, admin sees all tenant products, member sees only their own — reusing `ApplicationController#products`) and `GET /api/v1/tenants/:tenant_id/products/:id` (includes estimates). JSON shape: `{ products: [...], meta: { total_pages, current_page, per_page, total_entries } }` for index, matching the contract documented earlier in this plan.
+- Routes: `resources :tenants, only: [] do resources :products, only: %i[index show] end` under `/api/v1`.
+- Frontend: `api/products.ts` (typed fetchers), `pages/ProductsListPage.tsx` (paginated table), `pages/ProductDetailPage.tsx` (estimates + total), wired into `App.tsx` behind `RequireAuth`, with a "Products" nav link and a dashboard link. Added `@tanstack/react-query` (`QueryClientProvider` now wraps the app in the entrypoint) — this is the first page that actually needed data-fetching/caching, matching the stack already agreed in the plan.
+- `spec/requests/api/v1/products_spec.rb` — covers unauthenticated 401, admin seeing all tenant products with correct pagination meta, wrong-tenant 403, product detail with estimates for the owning customer, and 404 for a product the signed-in non-admin doesn't own.
+
+**Fixed, scoped to the new API only (not touching legacy code):** found that `ApplicationController`'s `rescue_from ActiveRecord::RecordNotFound, with: :not_found` is dead code — Rails matches `rescue_from` handlers in *reverse* registration order, and `rescue_from StandardError` is registered after it, so `RecordNotFound` was actually being caught by the generic 500 handler instead of returning 404. Rather than reorder the handlers in the shared `ApplicationController` (wide blast radius, 100+ existing tests depend on it), `Api::V1::BaseController` now re-registers `rescue_from ActiveRecord::RecordNotFound, with: :not_found` itself, which — being declared in the subclass — is checked first. This is also what makes the "404 for a product you don't own" test above actually return 404 instead of 500: `Api::V1::ProductsController#find_product` scopes through the `products` helper (`current_tenant.products` for admins, `current_user.products` otherwise) rather than `Product.find(params[:id])` like the legacy action does — the legacy `ProductsController#show` has no such scoping and skips `verify_user`, so it's possible today to view another tenant's product by guessing an id. Not fixing that in the legacy controller (out of scope), but didn't carry the gap into the new API.
+
+**Verified:**
+- `npx tsc --noEmit` and `bundle exec vite build` both pass (393 → 441 modules, build still ~200ms).
+- `bundle exec rspec` — 150 examples (10 new: 5 products + the 5 sessions specs from Phase 1), same 8 pre-existing unrelated failures.
+- Live end-to-end against the real dev server: created a throwaway tenant/admin user/3 products/estimates (Sidekiq needed a local Redis — wasn't running in this sandbox by default, started one for this), signed in, hit `/api/v1/tenants/:id/products` (got all 3 with correct pagination meta), `/api/v1/tenants/:id/products/:id` (got estimates + total), confirmed a wrong tenant id returns 403 and a nonexistent product returns 404 — then fully deleted the throwaway data afterward.
+- Still no real browser/click-through check (no Playwright) — same caveat as Phases 0–1.
+
+**Incidental finding (not fixed, out of scope):** hit the same category of missing-cascade issue as Phase 1's tenant/categories finding, this time on `Tenant#statuses`/`product_statuses` and `User`/`products` — destroying a tenant that has products fails with `PG::ForeignKeyViolation` unless products are deleted first. Only surfaced during my own cleanup script; not fixed, flagging again in case tenant/user deletion is a real path elsewhere in the app.
+
+Next: Phase 3 (forms & nested estimates) — awaiting your go-ahead.
+
 

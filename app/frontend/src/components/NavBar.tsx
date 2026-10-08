@@ -8,7 +8,10 @@ export function NavBar() {
   return (
     <Navbar bg="light" className="mb-4 px-3">
       <Navbar.Brand as={Link} to="/">FixIT</Navbar.Brand>
-      <Nav className="ms-auto align-items-center">
+      <Nav className="me-auto">
+        {user && <Nav.Link as={Link} to="/products">Products</Nav.Link>}
+      </Nav>
+      <Nav className="align-items-center">
         {user ? (
           <>
             <Navbar.Text className="me-3">
