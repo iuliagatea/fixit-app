@@ -4,9 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { FormProvider, useForm } from 'react-hook-form'
 import * as yup from 'yup'
-import { Alert, Button, Form, Spinner } from 'react-bootstrap'
+import { Alert, Button, Card, Form } from 'react-bootstrap'
 import axios from 'axios'
 import { ProductFormFields } from '../components/ProductFormFields'
+import { ErrorState, LoadingState } from '../components/AsyncState'
+import { PageContainer } from '../components/PageContainer'
 import { fetchStatuses } from '../api/statuses'
 import { fetchProduct, updateProduct } from '../api/products'
 import { useAuth } from '../context/AuthContext'
@@ -81,21 +83,37 @@ export function EditProductPage() {
     },
   })
 
-  if (!tenant || productLoading || !statuses) return <Spinner animation="border" className="d-block mx-auto mt-5" />
-  if (!product) return <p className="text-danger text-center mt-5">Couldn't load this product.</p>
+  if (!tenant || productLoading || !statuses) {
+    return (
+      <PageContainer maxWidth={700}>
+        <LoadingState />
+      </PageContainer>
+    )
+  }
+  if (!product) {
+    return (
+      <PageContainer maxWidth={700}>
+        <ErrorState message="Couldn't load this product." />
+      </PageContainer>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: 640, margin: '2rem auto' }}>
-      <h1 className="h4 mb-3">Edit product</h1>
-      {submitError && <Alert variant="danger">{submitError}</Alert>}
-      <FormProvider {...methods}>
-        <Form onSubmit={methods.handleSubmit((values) => mutation.mutate(values))}>
-          <ProductFormFields statuses={statuses} />
-          <Button type="submit" className="mt-3" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Saving…' : 'Save changes'}
-          </Button>
-        </Form>
-      </FormProvider>
-    </div>
+    <PageContainer maxWidth={700}>
+      <h1 className="h3 mb-3">Edit product</h1>
+      <Card className="card-flat">
+        <Card.Body className="p-4">
+          {submitError && <Alert variant="danger">{submitError}</Alert>}
+          <FormProvider {...methods}>
+            <Form onSubmit={methods.handleSubmit((values) => mutation.mutate(values))}>
+              <ProductFormFields statuses={statuses} />
+              <Button type="submit" className="mt-4" disabled={mutation.isPending}>
+                {mutation.isPending ? 'Saving…' : 'Save changes'}
+              </Button>
+            </Form>
+          </FormProvider>
+        </Card.Body>
+      </Card>
+    </PageContainer>
   )
 }

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Nav, Spinner } from 'react-bootstrap'
+import { Card, Nav } from 'react-bootstrap'
 import { fetchStatuses, fetchStatusProducts } from '../api/statuses'
+import { LoadingState } from '../components/AsyncState'
+import { PageContainer } from '../components/PageContainer'
 import { ProductsTable } from '../components/ProductsTable'
 import { useAuth } from '../context/AuthContext'
 
@@ -28,36 +30,42 @@ export function StatusBoardPage() {
     enabled: Boolean(tenant) && statusId !== null,
   })
 
-  if (!tenant || !statuses) return <Spinner animation="border" className="d-block mx-auto mt-5" />
+  if (!tenant || !statuses) {
+    return (
+      <PageContainer maxWidth={960}>
+        <LoadingState />
+      </PageContainer>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: 960, margin: '2rem auto' }}>
-      <h1 className="h4 mb-3">Status board</h1>
-      <Nav variant="tabs" className="mb-3">
+    <PageContainer maxWidth={960}>
+      <h1 className="h3 mb-3">Status board</h1>
+      <Nav variant="pills" className="mb-3 gap-2 flex-wrap">
         {statuses.map((status) => (
           <Nav.Item key={status.id}>
             <Nav.Link
               active={status.id === statusId}
+              className="rounded-pill border"
               onClick={() => {
                 setStatusId(status.id)
                 setPage(1)
               }}
             >
-              <span
-                className="d-inline-block me-2"
-                style={{ width: 10, height: 10, backgroundColor: status.color, borderRadius: '50%' }}
-              />
-              {status.name}
+              <span className="d-inline-flex align-items-center gap-2">
+                <span className="status-dot" style={{ backgroundColor: status.color }} />
+                {status.name}
+              </span>
             </Nav.Link>
           </Nav.Item>
         ))}
       </Nav>
 
-      {isLoading || !productsPage ? (
-        <Spinner animation="border" className="d-block mx-auto mt-5" />
-      ) : (
-        <ProductsTable data={productsPage} page={page} onPageChange={setPage} />
-      )}
-    </div>
+      <Card className="card-flat">
+        <Card.Body>
+          {isLoading || !productsPage ? <LoadingState /> : <ProductsTable data={productsPage} page={page} onPageChange={setPage} />}
+        </Card.Body>
+      </Card>
+    </PageContainer>
   )
 }

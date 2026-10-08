@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Alert, Button, Form } from 'react-bootstrap'
 import axios from 'axios'
+import { AuthLayout } from '../components/AuthLayout'
 import { useAuth } from '../context/AuthContext'
 
 export function SignInPage() {
@@ -30,30 +31,39 @@ export function SignInPage() {
   }
 
   return (
-    <Form onSubmit={handleSubmit} style={{ maxWidth: 360, margin: '4rem auto' }}>
-      <h1 className="h4 mb-4">Sign in</h1>
-      {error && <Alert variant="danger">{error}</Alert>}
-      <Form.Group className="mb-3" controlId="signInEmail">
-        <Form.Label>Email</Form.Label>
-        <Form.Control
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-        />
-      </Form.Group>
-      <Form.Group className="mb-3" controlId="signInPassword">
-        <Form.Label>Password</Form.Label>
-        <Form.Control
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-        />
-      </Form.Group>
-      <Button type="submit" disabled={submitting}>
-        {submitting ? 'Signing in…' : 'Sign in'}
-      </Button>
-    </Form>
+    <AuthLayout title="Sign in">
+      <Form onSubmit={handleSubmit}>
+        {error && <Alert variant="danger">{error}</Alert>}
+        <Form.Group className="mb-3" controlId="signInEmail">
+          <Form.Label>Email</Form.Label>
+          <Form.Control
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </Form.Group>
+        <Form.Group className="mb-2" controlId="signInPassword">
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+        </Form.Group>
+        <div className="text-end mb-3">
+          <Link to="/reset-password" className="small">
+            Forgot password?
+          </Link>
+        </div>
+        <Button type="submit" className="w-100" disabled={submitting}>
+          {submitting ? 'Signing in…' : 'Sign in'}
+        </Button>
+        <p className="text-center text-secondary small mt-3 mb-0">
+          New here? <Link to="/sign-up">Create an account</Link>
+        </p>
+      </Form>
+    </AuthLayout>
   )
 }

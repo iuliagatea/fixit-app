@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Alert, Button, Form, Spinner, Table } from 'react-bootstrap'
+import { Alert, Button, Card, Form, Table } from 'react-bootstrap'
 import axios from 'axios'
 import { createStatus, fetchStatusesDetailed } from '../api/statuses'
+import { LoadingState } from '../components/AsyncState'
+import { PageContainer } from '../components/PageContainer'
 import { StatusRow } from '../components/StatusRow'
 import { useAuth } from '../context/AuthContext'
 
@@ -32,52 +34,70 @@ export function StatusesAdminPage() {
     },
   })
 
-  if (!tenant || isLoading || !statuses) return <Spinner animation="border" className="d-block mx-auto mt-5" />
+  if (!tenant || isLoading || !statuses) {
+    return (
+      <PageContainer>
+        <LoadingState />
+      </PageContainer>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: 640, margin: '2rem auto' }}>
-      <h1 className="h4 mb-3">Statuses</h1>
-      <Table size="sm">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Active</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {statuses.map((status) => (
-            <StatusRow key={status.id} tenantId={tenant.id} status={status} />
-          ))}
-        </tbody>
-      </Table>
+    <PageContainer>
+      <h1 className="h3 mb-3">Statuses</h1>
+      <Card className="card-flat mb-3">
+        <Table size="sm" className="align-middle mb-0">
+          <thead>
+            <tr className="text-secondary small text-uppercase">
+              <th className="fw-semibold ps-3">Name</th>
+              <th className="fw-semibold">Active</th>
+              <th className="pe-3" />
+            </tr>
+          </thead>
+          <tbody>
+            {statuses.map((status) => (
+              <StatusRow key={status.id} tenantId={tenant.id} status={status} />
+            ))}
+          </tbody>
+        </Table>
+      </Card>
 
-      <h2 className="h6 mt-4">Add a status</h2>
-      {error && <Alert variant="danger">{error}</Alert>}
-      <Form
-        className="d-flex gap-2 align-items-center"
-        onSubmit={(event) => {
-          event.preventDefault()
-          createMutation.mutate()
-        }}
-      >
-        <Form.Control
-          placeholder="Name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          style={{ maxWidth: 200 }}
-          required
-        />
-        <Form.Control
-          type="color"
-          value={color}
-          onChange={(event) => setColor(event.target.value)}
-          style={{ maxWidth: 60 }}
-        />
-        <Button type="submit" size="sm" disabled={createMutation.isPending}>
-          Add
-        </Button>
-      </Form>
-    </div>
+      <Card className="card-flat">
+        <Card.Body>
+          <Card.Title className="h6 mb-3">Add a status</Card.Title>
+          {error && <Alert variant="danger">{error}</Alert>}
+          <Form
+            className="d-flex gap-2 align-items-end flex-wrap"
+            onSubmit={(event) => {
+              event.preventDefault()
+              createMutation.mutate()
+            }}
+          >
+            <Form.Group controlId="newStatusName">
+              <Form.Label className="small text-secondary mb-1">Name</Form.Label>
+              <Form.Control
+                placeholder="e.g. On hold"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                style={{ maxWidth: 220 }}
+                required
+              />
+            </Form.Group>
+            <Form.Group controlId="newStatusColor">
+              <Form.Label className="small text-secondary mb-1">Color</Form.Label>
+              <Form.Control
+                type="color"
+                value={color}
+                onChange={(event) => setColor(event.target.value)}
+                style={{ maxWidth: 60 }}
+              />
+            </Form.Group>
+            <Button type="submit" disabled={createMutation.isPending}>
+              Add status
+            </Button>
+          </Form>
+        </Card.Body>
+      </Card>
+    </PageContainer>
   )
 }

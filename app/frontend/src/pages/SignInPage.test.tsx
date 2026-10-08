@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { SignInPage } from './SignInPage'
 import { useAuth } from '../context/AuthContext'
 
@@ -9,10 +10,19 @@ jest.mock('../context/AuthContext', () => ({
 
 const mockNavigate = jest.fn()
 jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }))
 
 const mockUseAuth = useAuth as jest.Mock
+
+function renderSignInPage() {
+  return render(
+    <MemoryRouter>
+      <SignInPage />
+    </MemoryRouter>,
+  )
+}
 
 describe('SignInPage', () => {
   beforeEach(() => {
@@ -23,7 +33,7 @@ describe('SignInPage', () => {
     const signIn = jest.fn().mockResolvedValue(undefined)
     mockUseAuth.mockReturnValue({ signIn })
 
-    render(<SignInPage />)
+    renderSignInPage()
     await userEvent.type(screen.getByLabelText('Email'), 'admin@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'secret123')
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
@@ -40,7 +50,7 @@ describe('SignInPage', () => {
     const signIn = jest.fn().mockRejectedValue(axiosLikeError)
     mockUseAuth.mockReturnValue({ signIn })
 
-    render(<SignInPage />)
+    renderSignInPage()
     await userEvent.type(screen.getByLabelText('Email'), 'admin@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'wrong')
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))
@@ -53,7 +63,7 @@ describe('SignInPage', () => {
     const signIn = jest.fn().mockRejectedValue(new Error('network down'))
     mockUseAuth.mockReturnValue({ signIn })
 
-    render(<SignInPage />)
+    renderSignInPage()
     await userEvent.type(screen.getByLabelText('Email'), 'admin@example.com')
     await userEvent.type(screen.getByLabelText('Password'), 'secret123')
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))

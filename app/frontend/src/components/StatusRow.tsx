@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, Button, Form } from 'react-bootstrap'
+import { Alert, Badge, Button, Form } from 'react-bootstrap'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { deleteStatus, updateStatus } from '../api/statuses'
@@ -43,7 +43,7 @@ export function StatusRow({ tenantId, status }: Props) {
   if (editing) {
     return (
       <tr>
-        <td colSpan={3}>
+        <td colSpan={3} className="py-2 ps-3 pe-3">
           {error && <Alert variant="danger" className="py-1">{error}</Alert>}
           <div className="d-flex gap-2 align-items-center">
             <Form.Control size="sm" value={name} onChange={(e) => setName(e.target.value)} style={{ maxWidth: 200 }} />
@@ -68,15 +68,18 @@ export function StatusRow({ tenantId, status }: Props) {
 
   return (
     <tr>
-      <td>
-        <span
-          className="d-inline-block me-2"
-          style={{ width: 12, height: 12, backgroundColor: status.color, borderRadius: '50%' }}
-        />
-        {status.name}
+      <td className="ps-3">
+        <span className="d-inline-flex align-items-center gap-2">
+          <span className="status-dot" style={{ backgroundColor: status.color }} />
+          {status.name}
+        </span>
       </td>
-      <td>{status.is_active ? 'Active' : 'Inactive'}</td>
-      <td className="text-end">
+      <td>
+        <Badge bg={status.is_active ? 'success' : 'secondary'} className="fw-normal">
+          {status.is_active ? 'Active' : 'Inactive'}
+        </Badge>
+      </td>
+      <td className="text-end pe-3">
         {error && <Alert variant="danger" className="py-1 mb-1">{error}</Alert>}
         <Button size="sm" variant="outline-secondary" className="me-2" onClick={() => setEditing(true)}>
           Edit

@@ -471,6 +471,11 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.28.0.tgz#04d90d5752b4ce65d2b6ac25eba08ff7624fe07c"
   integrity sha512-pEl1bO9mfAmIC+tW5btTmrKaujg3zGtUmWNdCw/xs70FBjwAL3o9OEKNHvNmnyylD6ubxUERiEhdsL0xBQ9efw==
 
+"@fontsource/inter@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/inter/-/inter-5.3.0.tgz#866278dc2357659f8be1755c8b67f29d3697b440"
+  integrity sha512-RofMylZmjlJEfELXeNHFWBRcSs75rGU/6bV2S2jfnvv/3rPXPGe0LgUJTklcHZ9lM4OZmAVFhcJPnACfb91A3g==
+
 "@hookform/resolvers@^5.9.1":
   version "5.9.1"
   resolved "https://registry.yarnpkg.com/@hookform/resolvers/-/resolvers-5.9.1.tgz#2010c1b542ce6fa75fa5d8fee5cc911ece009f5c"

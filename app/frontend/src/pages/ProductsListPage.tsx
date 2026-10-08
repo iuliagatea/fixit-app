@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Spinner } from 'react-bootstrap'
+import { Card } from 'react-bootstrap'
 import { fetchProducts } from '../api/products'
+import { ErrorState, LoadingState } from '../components/AsyncState'
+import { PageContainer } from '../components/PageContainer'
 import { ProductsTable } from '../components/ProductsTable'
 import { useAuth } from '../context/AuthContext'
 
@@ -17,20 +19,27 @@ export function ProductsListPage() {
   })
 
   if (!tenant) return null
-  if (isLoading) return <Spinner animation="border" className="d-block mx-auto mt-5" />
-  if (isError || !data) return <p className="text-danger text-center mt-5">Couldn't load products.</p>
 
   return (
-    <div style={{ maxWidth: 960, margin: '2rem auto' }}>
+    <PageContainer maxWidth={960}>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h1 className="h4 mb-0">Products</h1>
+        <div>
+          <h1 className="h3 mb-0">Products</h1>
+          {data && <p className="text-secondary mb-0">{data.meta.total_entries} total</p>}
+        </div>
         {user?.is_admin && (
-          <Link to="/products/new" className="btn btn-primary btn-sm">
+          <Link to="/products/new" className="btn btn-primary">
             New product
           </Link>
         )}
       </div>
-      <ProductsTable data={data} page={page} onPageChange={setPage} />
-    </div>
+      <Card className="card-flat">
+        <Card.Body>
+          {isLoading && <LoadingState />}
+          {isError && <ErrorState message="Couldn't load products." />}
+          {data && <ProductsTable data={data} page={page} onPageChange={setPage} />}
+        </Card.Body>
+      </Card>
+    </PageContainer>
   )
 }

@@ -16,10 +16,18 @@ import { StatusesAdminPage } from './pages/StatusesAdminPage'
 import { TenantSettingsPage } from './pages/TenantSettingsPage'
 import { UpgradePlanPage } from './pages/UpgradePlanPage'
 
+function LoadingScreen() {
+  return (
+    <div className="d-flex justify-content-center align-items-center text-secondary" style={{ minHeight: '40vh' }}>
+      Loading…
+    </div>
+  )
+}
+
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
 
-  if (loading) return <p className="text-center mt-5">Loading…</p>
+  if (loading) return <LoadingScreen />
   if (!user) return <Navigate to="/sign-in" replace />
 
   return <>{children}</>
@@ -28,7 +36,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
 function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
 
-  if (loading) return <p className="text-center mt-5">Loading…</p>
+  if (loading) return <LoadingScreen />
   if (!user) return <Navigate to="/sign-in" replace />
   if (!user.is_admin) return <Navigate to="/" replace />
 
@@ -37,7 +45,7 @@ function RequireAdmin({ children }: { children: ReactNode }) {
 
 export function App() {
   return (
-    <>
+    <div className="app-shell">
       <NavBar />
       <Routes>
         <Route
@@ -117,6 +125,6 @@ export function App() {
         <Route path="/confirm" element={<ConfirmPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
-    </>
+    </div>
   )
 }

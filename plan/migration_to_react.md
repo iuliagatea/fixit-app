@@ -598,4 +598,22 @@ Investigated and fixed the two incidental findings flagged during Phases 1 and 2
 - Added `spec/models/tenant_spec.rb`'s `#destroy` test: builds a tenant with products+estimates+statuses+product_statuses+categories+payment+reviews all at once and asserts the whole thing destroys cleanly. Verified it actually catches the regression (temporarily reverted the model fix, confirmed the test fails with the exact original error, restored the fix) rather than trusting it blind.
 - `bundle exec rspec`: 176 examples (1 new), same single pre-existing unrelated failure (500-product plan limit) as every phase since it was first found.
 
+---
+
+## Post-Phase-6: visual redesign (2026-10-08)
+
+A full visual pass across the React frontend, delivering on decision #9's deferred "make the design more modern and clean" — still `react-bootstrap` + Bootstrap 5, as decided, but now properly re-skinned rather than left at Bootstrap defaults.
+
+**Design system, not per-page tweaks:** switched the entrypoint from importing precompiled `bootstrap/dist/css/bootstrap.min.css` to a new `app/frontend/src/styles/theme.scss` that overrides Bootstrap's own Sass variables (`$primary`, `$border-radius`, `$font-family-sans-serif`, `$card-box-shadow`, etc.) *before* importing Bootstrap's SCSS source — so every `react-bootstrap` component picks up the new look for free, rather than fighting it component-by-component. Palette: indigo primary (`#4f46e5`), slate neutrals, a soft off-white body background, 8px base radius. Typography: self-hosted Inter (`@fontsource/inter`, not a Google Fonts `<link>` — no external request at runtime). A handful of small utility classes (`.card-flat`, `.status-dot`, `.quick-link-card`, `.app-shell`) cover the few things Bootstrap's own utilities don't.
+
+**New shared components**, extracted because the same pattern was about to repeat across every page: `PageContainer` (consistent width/padding, replacing ad-hoc inline `style={{maxWidth, margin}}`), `AuthLayout` (centered card, shared by sign-in and the legacy-redirect stub pages), `AsyncState`'s `LoadingState`/`ErrorState` (consistent loading/error treatment).
+
+**Per-page changes**: `NavBar` (sticky, user avatar initials + tenant name, responsive collapse), `DashboardPage` (was a bare "Signed in" string — now a real landing page with quick-action cards to Products/Status board/admin pages), `ProductsListPage`/`ProductDetailPage`/`ProductsTable` (card-wrapped, status shown as a colored dot + label instead of a hard-to-read colored badge background), `ProductFormFields` (two-column layout, sectioned with a divider before Estimates), `NewProductPage`/`EditProductPage` (card-wrapped, sectioned), `StatusesAdminPage`/`StatusRow` (card-wrapped table, Active/Inactive as a real badge), `StatusBoardPage` (pill-style status filter instead of plain tabs), `TenantSettingsPage` (categories as toggleable pill checkboxes, plan shown as a badge with a clear upgrade CTA), `UpgradePlanPage` (Stripe `CardElement` now styled to match the app's font/colors instead of Stripe's default iframe styling, plus a one-line "what you get" blurb).
+
+**Verified:**
+- `npx tsc --noEmit`, `bundle exec vite build` (clean rebuild via `vite:clobber` first), `npx jest` (20/20 — two tests needed updates: `SignInPage.test.tsx`'s `react-router-dom` mock needed `Link` now that the page uses it for "Forgot password?"/"Create an account", fixed via `jest.requireActual` + wrapping in `MemoryRouter`), and `bundle exec rspec` (176/176 modulo the one pre-existing failure) all green.
+- Confirmed the compiled production CSS actually contains the new theme (`grep`'d for the indigo hex and the `.status-dot` class in the built output) rather than trusting the build succeeded silently on a fallback.
+- Live dev server (`bin/vite dev` + `rails server`) serves the SPA shell and the theme/entrypoint transform cleanly with no errors in the Vite dev log.
+- **Not visually verified** — no browser or screenshot tool is available in this session (checked; only non-visual tools like `WebFetch` are present). Verification here is structural: type-checks, a clean production build, the compiled CSS genuinely containing the new design tokens, and the Jest component tests actually mounting/rendering the redesigned components in jsdom (not just unit-testing logic in isolation). I did not click through the UI myself. If you want eyes-on confirmation, running `bin/dev` and opening `/app` locally is the way to check before considering this fully done.
+
 

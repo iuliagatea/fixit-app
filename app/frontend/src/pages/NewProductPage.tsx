@@ -4,9 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { FormProvider, useForm } from 'react-hook-form'
 import * as yup from 'yup'
-import { Alert, Button, Form, Spinner } from 'react-bootstrap'
+import { Alert, Button, Card, Form } from 'react-bootstrap'
 import axios from 'axios'
 import { ProductFormFields } from '../components/ProductFormFields'
+import { LoadingState } from '../components/AsyncState'
+import { PageContainer } from '../components/PageContainer'
 import { fetchStatuses } from '../api/statuses'
 import { createProduct } from '../api/products'
 import { useAuth } from '../context/AuthContext'
@@ -72,35 +74,48 @@ export function NewProductPage() {
     },
   })
 
-  if (!tenant || !statuses) return <Spinner animation="border" className="d-block mx-auto mt-5" />
+  if (!tenant || !statuses) {
+    return (
+      <PageContainer maxWidth={700}>
+        <LoadingState />
+      </PageContainer>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: 640, margin: '2rem auto' }}>
-      <h1 className="h4 mb-3">New product</h1>
-      {submitError && <Alert variant="danger">{submitError}</Alert>}
-      <FormProvider {...methods}>
-        <Form onSubmit={methods.handleSubmit((values) => mutation.mutate(values))}>
-          <Form.Group className="mb-3" controlId="newProductCustomerEmail">
-            <Form.Label>Customer email</Form.Label>
-            <Form.Control {...methods.register('email')} isInvalid={!!methods.formState.errors.email} />
-            <Form.Control.Feedback type="invalid">{methods.formState.errors.email?.message}</Form.Control.Feedback>
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="newProductCustomerFirstName">
-            <Form.Label>New customer first name (only needed if they don't exist yet)</Form.Label>
-            <Form.Control {...methods.register('first_name')} />
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="newProductCustomerLastName">
-            <Form.Label>New customer last name</Form.Label>
-            <Form.Control {...methods.register('last_name')} />
-          </Form.Group>
+    <PageContainer maxWidth={700}>
+      <h1 className="h3 mb-3">New product</h1>
+      <Card className="card-flat">
+        <Card.Body className="p-4">
+          {submitError && <Alert variant="danger">{submitError}</Alert>}
+          <FormProvider {...methods}>
+            <Form onSubmit={methods.handleSubmit((values) => mutation.mutate(values))}>
+              <h2 className="h6 mb-3">Customer</h2>
+              <Form.Group className="mb-3" controlId="newProductCustomerEmail">
+                <Form.Label>Customer email</Form.Label>
+                <Form.Control {...methods.register('email')} isInvalid={!!methods.formState.errors.email} />
+                <Form.Control.Feedback type="invalid">{methods.formState.errors.email?.message}</Form.Control.Feedback>
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="newProductCustomerFirstName">
+                <Form.Label>New customer first name (only needed if they don't exist yet)</Form.Label>
+                <Form.Control {...methods.register('first_name')} />
+              </Form.Group>
+              <Form.Group className="mb-4" controlId="newProductCustomerLastName">
+                <Form.Label>New customer last name</Form.Label>
+                <Form.Control {...methods.register('last_name')} />
+              </Form.Group>
 
-          <ProductFormFields statuses={statuses} />
+              <hr className="mb-4" />
+              <h2 className="h6 mb-3">Product details</h2>
+              <ProductFormFields statuses={statuses} />
 
-          <Button type="submit" className="mt-3" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creating…' : 'Create product'}
-          </Button>
-        </Form>
-      </FormProvider>
-    </div>
+              <Button type="submit" className="mt-4" disabled={mutation.isPending}>
+                {mutation.isPending ? 'Creating…' : 'Create product'}
+              </Button>
+            </Form>
+          </FormProvider>
+        </Card.Body>
+      </Card>
+    </PageContainer>
   )
 }
