@@ -4,6 +4,13 @@ require 'sidekiq/web'
 
 Rails.application.routes.draw do
   mount Sidekiq::Web => '/sidekiq' # access it at http://localhost:3000/sidekiq
+
+  namespace :api do
+    namespace :v1 do
+      get 'ping', to: 'health#ping'
+    end
+  end
+
   root to: 'home#index'
   resources :categories
   resources :reviews, param: :review_id

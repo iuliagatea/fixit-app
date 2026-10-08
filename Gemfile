@@ -90,3 +90,6 @@ gem 'twitter-bootstrap-rails', '~> 5.3'
 gem 'pundit', '~> 2.5'
 
 gem 'sidekiq'
+
+# React frontend build (Phase 0 of Rails -> React migration, see plan/migration_to_react.md)
+gem 'vite_rails'
