@@ -1,15 +1,15 @@
-A Rails 7.2 SaaS application that enables service providers (businesses) to manage and showcase their products/services with Stripe payments integration. Built with PostgreSQL, Devise authentication, and multi-tenant architecture using thread-local tenant context.
-
-### Tech Stack
+A Rails 7.2 SaaS application that enables service providers (businesses) to manage and showcase their products/services with Stripe payments integration. Built with PostgreSQL, Devise authentication, and multi-tenant architecture using thread-local tenant context. Currently migrating incrementally to a React + TypeScript frontend (served from Rails via Vite) backed by a versioned JSON API, alongside the existing server-rendered pages — see `plan/migration_to_react.md`.
 
 * **Framework** — Ruby on Rails 7.2.3.1
 * **Database** — PostgreSQL with pg_search for full-text search
 * **Authentication** — Devise with email confirmation
 * **Payments** — Stripe (production ready)
-* **Background Jobs** — Sidekiq (configurable)
-* **Frontend** — Bootstrap 5, jQuery, Turbo
+* **Background Jobs** — Sidekiq (`app/sidekiq/`)
+* **Legacy Frontend** — Bootstrap 5, jQuery, Turbo (server-rendered ERB views, kept indefinitely)
+* **New Frontend** — React 19 + TypeScript, built with Vite (`vite_rails`), mounted at `/app`; React Router, TanStack Query, react-hook-form + yup, react-bootstrap, Stripe Elements for payment collection. See `plan/migration_to_react.md` for the full migration plan and phase-by-phase log.
+* **API** — Versioned JSON API under `/api/v1/*` (sessions, tenants, products, statuses, categories), backing the React frontend
 * **PDF** — WickedPDF with wkhtmltopdf
-* **Testing** — RSpec 3.13, FactoryBot, Shoulda Matchers
+* **Testing** — RSpec 3.13, FactoryBot, Shoulda Matchers (Rails); Jest + React Testing Library (frontend)
 * **Code Quality** — Rubocop, Rubocop-Rails, Rubocop-RSpec
   
 ---
@@ -32,16 +32,20 @@ A Rails 7.2 SaaS application that enables service providers (businesses) to mana
 
 1. **Setup Environment**
    bin/setup              # Install gems, create DB, seed data
+   yarn install           # Install JS deps (esbuild/sass pipeline + the React/Vite frontend)
 
 2. **Run Application**
-   bin/dev               # Start Rails + Sass watcher via Procfile.dev
+   bin/dev               # Start everything via Procfile.dev: Rails server, css watcher, esbuild watch, and `vite dev` (React frontend)
    rails server          # Start Rails server (default: http://localhost:3000)
    redis-server          # Start Redis for Sidekiq (in separate terminal)
    pg_ctl -D /usr/local/var/postgres start  # Start PostgreSQL locally (if not using Docker)
 
+   Legacy server-rendered pages are at their usual URLs; the React frontend is at `/app` (e.g. `/app/products`), calling the `/api/v1/*` JSON API.
+
 3. **Run Tests**
-   bundle exec rspec     # Full test suite
+   bundle exec rspec     # Full Rails test suite (models, request specs for /api/v1, etc.)
    bundle exec rspec spec/controllers/products_controller_spec.rb  # Specific file
+   yarn test             # Frontend Jest/React Testing Library suite
 
 4. **Database**
    bin/rails db:create   # Create database
@@ -106,18 +110,22 @@ A Rails 7.2 SaaS application that enables service providers (businesses) to mana
 | File | Purpose |
 |------|---------|
 |   app/models/             | Domain logic (Product, Tenant, User, etc.)
-|   app/controllers/        | Request handlers (ProductsController, TenantsController)
-|   app/services/           | Business logic encapsulation (ProductCreationService, etc.)
-|   app/jobs/               | Background jobs (ProductCreateNotificationJob, etc.)
+|   app/controllers/        | Legacy request handlers (ProductsController, TenantsController)
+|   app/controllers/api/v1/ | JSON API controllers backing the React frontend
+|   app/services/           | Business logic encapsulation (Products::CreateService, etc.)
+|   app/sidekiq/            | Background jobs (Products::CardEmailJob, etc.)
 |   app/mailers/            | Email templates (UserNotifier)
-|   app/views/              | ERB templates organized by controller
+|   app/views/              | ERB templates organized by controller (legacy pages)
+|   app/frontend/           | React + TypeScript frontend (Vite), mounted at `/app`
 |   spec/models/            | Model unit tests
-|   spec/controllers/       | Controller integration tests
+|   spec/controllers/       | Legacy controller integration tests
+|   spec/requests/api/v1/   | Request specs for the JSON API
 |   spec/factories/         | FactoryBot factories for test data
 |   spec/support/           | Shared examples, helpers
 |   config/initializers/    | Stripe, Devise, Seemsrateable, etc.
 |   config/environments/    | Environment-specific config
-|   config/routes.rb        | REST routing
+|   config/routes.rb        | REST routing (legacy + `/api/v1/*` + `/app` SPA shell)
+|   plan/migration_to_react.md | React migration plan and phase-by-phase implementation log
 
 ---
 
@@ -136,4 +144,5 @@ A Rails 7.2 SaaS application that enables service providers (businesses) to mana
 - Thread-local tenant context works for single-threaded servers; migrate to RequestStore for Thread.new operations
 - Free plan limited to 500 products (hard limit enforced)
 - Stripe keys stored as ENV vars; consider secrets manager for production
-- No API versioning yet (consider JSON:API for future mobile clients)
+- React migration is incremental: only sign-in/sign-up-stub, products, statuses, tenant settings, and plan upgrade have React pages so far; everything else (reviews, search, contact, category admin) is still legacy-only. See `plan/migration_to_react.md` for what's done and what's intentionally out of scope.
+- No E2E (Playwright/Cypress) coverage yet — deferred to avoid installing a browser toolchain without being asked; current coverage is request specs (Rails) + Jest/RTL (React)

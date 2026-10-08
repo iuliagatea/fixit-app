@@ -9,13 +9,13 @@ This document captures the plan, checklist, architecture options, and recommende
 - [x] Decide architecture: Integrated SPA (single repo) or Separate frontend repo
 - [x] Add a small API health endpoint (/api/v1/ping) to validate frontend/backend communication
 - [x] Scaffold React app (integrated in `app/frontend` via Vite) — TypeScript
-- [ ] Implement auth flow (Devise cookie-based for integrated; token-based for separate)
-- [ ] Add versioned API namespace `/api/v1/*` and API controllers (products, tenants, statuses, categories)
-- [ ] Expose JSON contracts (use Jbuilder or serializers) and include pagination metadata
-- [ ] Migrate UI features incrementally (products index/show → forms/estimates → tenant admin → payments)
-- [ ] Preserve server-side only features (Stripe payments, PDF generation) behind API endpoints
-- [ ] Update Procfile.dev and CI to run Rails + frontend dev server or integrated build
-- [ ] Convert/extend tests: controller specs → request specs; add frontend tests (Jest/RTL)
+- [x] Implement auth flow (Devise cookie-based for integrated; token-based for separate) — Phase 1, `Api::V1::SessionsController`
+- [x] Add versioned API namespace `/api/v1/*` and API controllers (products, tenants, statuses, categories) — Phases 1–5
+- [x] Expose JSON contracts and include pagination metadata — done via plain `render json:` hash-builder methods (`product_json`, `status_admin_json`, `tenant_json`, etc. in `Api::V1::BaseController`/controllers), not Jbuilder or a serializer gem; the stale `products/*.json.jbuilder` scaffolding predates this work and is untouched/unused by the new API. Pagination metadata (`total_pages`/`current_page`/`per_page`/`total_entries`) included on every paginated endpoint.
+- [x] Migrate UI features incrementally (products index/show → forms/estimates → tenant admin → payments) — Phases 2–5
+- [x] Preserve server-side only features (Stripe payments, PDF generation) behind API endpoints — `Payment#process_payment` and `wicked_pdf` generation are both untouched; Phase 5. PDF is linked directly from React rather than re-exposed under `/api/v1` (no new endpoint needed — the existing route already serves it).
+- [x] Update Procfile.dev ... — done, Phase 0 (dead `dartsass:watch` line + duplicate `css` lines removed, `vite dev` added). **CI**: not applicable — this repo has no CI configuration (no `.github/workflows` or similar) to update.
+- [x] Convert/extend tests: controller specs → request specs; add frontend tests (Jest/RTL) — every new `Api::V1::*` endpoint shipped with request specs from Phase 1 onward (176 examples total); no legacy controller specs were converted, since no legacy controller was touched/retired (see Phase 6's cutover note). Jest/RTL added in Phase 6 (20 tests).
 
 
 -- Summary recommendation
