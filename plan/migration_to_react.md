@@ -616,4 +616,21 @@ A full visual pass across the React frontend, delivering on decision #9's deferr
 - Live dev server (`bin/vite dev` + `rails server`) serves the SPA shell and the theme/entrypoint transform cleanly with no errors in the Vite dev log.
 - **Not visually verified** — no browser or screenshot tool is available in this session (checked; only non-visual tools like `WebFetch` are present). Verification here is structural: type-checks, a clean production build, the compiled CSS genuinely containing the new design tokens, and the Jest component tests actually mounting/rendering the redesigned components in jsdom (not just unit-testing logic in isolation). I did not click through the UI myself. If you want eyes-on confirmation, running `bin/dev` and opening `/app` locally is the way to check before considering this fully done.
 
+---
+
+## Post-redesign: due-date flags, completed/active split, filters (2026-10-08)
+
+Four requested changes to the products page, all server-backed (not client-side-only filtering of a single page of 10):
+
+- **Overdue / due-soon flagging** — computed entirely client-side (`app/frontend/src/utils/dueDate.ts`, unit tested): a row is "overdue" if `expected_completion_date` is in the past, "due soon" within the next 3 days, shown as both a colored badge and a tinted table row (`table-danger`/`table-warning`). No backend change needed for this part — the date was already in the payload.
+- **Active/completed split** — a new `Api::V1::ProductsController` filter, `completed=true|false`, matched against the tenant's status literally named "Completed" (same magic-name convention the rest of the app already uses for "Received" — flagging again: renaming that status via `StatusesAdminPage` would silently break the split, since nothing enforces the name). `ProductsListPage` now runs two independent paginated queries — in-progress products above, a "Completed" table below — each with its own page state and pagination, not one query split in the browser.
+- **Customer email column** — was already returned by the API (`product_json`'s `user: {email}`), just not rendered; added to `ProductsTable`.
+- **Filters** — `name` (matches product name or code), `status_id`, `customer_email`, all server-side query params (`Api::V1::ProductsController#apply_filters`), applied to both tables via one shared `ProductFilterBar`. Text inputs are debounced 300ms before triggering a request; changing any filter resets both tables back to page 1.
+
+**Verified:**
+- `bundle exec rspec` — 180 examples (4 new filter/split cases), same single pre-existing unrelated failure.
+- `npx jest` — 30/30 (10 new: 4 for the `dueStatus` utility, 6 for `ProductsTable`'s customer column/flagging/empty-state behavior).
+- `npx tsc --noEmit` and a clean `vite:clobber` + production build both pass.
+- Live end-to-end against the real dev server: created four products across two customers (overdue, due-soon, far-future, and one moved to "Completed") and confirmed via real HTTP requests that the active/completed split, and all three filters (name, status, customer email), return exactly the expected subsets — not just asserted in specs.
+
 

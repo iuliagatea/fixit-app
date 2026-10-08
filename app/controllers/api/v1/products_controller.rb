@@ -8,8 +8,9 @@ module Api
       before_action :verify_user, except: %i[index show]
 
       def index
-        scoped = products.includes(:estimates, :tenant, :user, :statuses).order(created_at: :desc)
-        paginated = paginate(scoped, params[:page], params[:per_page])
+        scoped = products.includes(:estimates, :tenant, :user, :statuses)
+        scoped = apply_filters(scoped)
+        paginated = paginate(scoped.order(created_at: :desc), params[:page], params[:per_page])
 
         render json: {
           products: paginated.map { |product| product_json(product) },
@@ -73,6 +74,48 @@ module Api
 
       def member_params
         (params[:member] || ActionController::Parameters.new).permit(:first_name, :last_name)
+      end
+
+      # Supports the products index's name/status/customer-email filters and
+      # the active-vs-completed table split. "Completed" is matched by name,
+      # same convention the rest of the app already uses for magic statuses
+      # (e.g. Product#initialize_status hardcodes "Received") — renaming the
+      # tenant's "Completed" status would silently break the split.
+      def apply_filters(scope)
+        scope = filter_by_name(scope)
+        scope = filter_by_customer_email(scope)
+        scope = filter_by_status(scope)
+        filter_by_completed(scope)
+      end
+
+      def filter_by_name(scope)
+        return scope if params[:name].blank?
+
+        scope.where('products.name ILIKE :q OR products.code ILIKE :q', q: "%#{params[:name]}%")
+      end
+
+      def filter_by_customer_email(scope)
+        return scope if params[:customer_email].blank?
+
+        scope.joins(:user).where('users.email ILIKE :email', email: "%#{params[:customer_email]}%")
+      end
+
+      def filter_by_status(scope)
+        return scope if params[:status_id].blank?
+
+        scope.where(current_status_id: params[:status_id])
+      end
+
+      def filter_by_completed(scope)
+        case params[:completed]
+        when 'true' then scope.where(current_status_id: completed_status_id)
+        when 'false' then scope.where.not(current_status_id: completed_status_id)
+        else scope
+        end
+      end
+
+      def completed_status_id
+        @completed_status_id ||= current_tenant.statuses.find_by(name: 'Completed')&.id
       end
     end
   end

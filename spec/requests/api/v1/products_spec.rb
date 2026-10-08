@@ -52,6 +52,64 @@ RSpec.describe 'Api::V1::Products', type: :request do
 
       expect(response).to have_http_status(:forbidden)
     end
+
+    describe 'filtering' do
+      let(:other_customer) do
+        Tenant.set_current_tenant(tenant)
+        created = create(:user, :regular, email: 'jane@example.com', member: create(:member))
+        created.confirm
+        created
+      end
+
+      before { sign_in_as(admin_user) }
+
+      it 'filters by product name or code (case-insensitive, partial match)' do
+        create(:product, tenant_id: tenant.id, user: customer, name: 'Kitchen sink repair', code: 'KSR-1')
+        create(:product, tenant_id: tenant.id, user: customer, name: 'Bathroom tiling', code: 'BT-1')
+
+        get "/api/v1/tenants/#{tenant.id}/products", params: { name: 'kitchen' }, as: :json
+
+        names = response.parsed_body['products'].pluck('name')
+        expect(names).to eq(['Kitchen sink repair'])
+      end
+
+      it 'filters by status_id' do
+        received = tenant.statuses.find_by(name: 'Received')
+        in_progress = tenant.statuses.find_by(name: 'In progress')
+        moved = create(:product, tenant_id: tenant.id, user: customer)
+        moved.transition_to_status!(in_progress)
+        create(:product, tenant_id: tenant.id, user: customer) # stays on Received
+
+        get "/api/v1/tenants/#{tenant.id}/products", params: { status_id: received.id }, as: :json
+        expect(response.parsed_body['products'].size).to eq(1)
+
+        get "/api/v1/tenants/#{tenant.id}/products", params: { status_id: in_progress.id }, as: :json
+        expect(response.parsed_body['products'].pluck('id')).to eq([moved.id])
+      end
+
+      it 'filters by customer email (case-insensitive, partial match)' do
+        create(:product, tenant_id: tenant.id, user: customer)
+        create(:product, tenant_id: tenant.id, user: other_customer)
+
+        get "/api/v1/tenants/#{tenant.id}/products", params: { customer_email: 'JANE' }, as: :json
+
+        emails = response.parsed_body['products'].map { |p| p['user']['email'] }
+        expect(emails).to eq(['jane@example.com'])
+      end
+
+      it 'splits active vs. completed products via the completed param' do
+        completed_status = tenant.statuses.find_by(name: 'Completed')
+        done = create(:product, tenant_id: tenant.id, user: customer)
+        done.transition_to_status!(completed_status)
+        create(:product, tenant_id: tenant.id, user: customer) # stays on Received
+
+        get "/api/v1/tenants/#{tenant.id}/products", params: { completed: 'true' }, as: :json
+        expect(response.parsed_body['products'].pluck('id')).to eq([done.id])
+
+        get "/api/v1/tenants/#{tenant.id}/products", params: { completed: 'false' }, as: :json
+        expect(response.parsed_body['products'].pluck('id')).not_to include(done.id)
+      end
+    end
   end
 
   describe 'GET /api/v1/tenants/:tenant_id/products/:id' do

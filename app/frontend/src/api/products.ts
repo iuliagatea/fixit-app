@@ -43,8 +43,21 @@ export interface ProductsPage {
   meta: PaginationMeta
 }
 
-export async function fetchProducts(tenantId: number, page: number): Promise<ProductsPage> {
-  const { data } = await apiClient.get<ProductsPage>(`/tenants/${tenantId}/products`, { params: { page } })
+export interface ProductFilters {
+  name?: string
+  status_id?: number
+  customer_email?: string
+  completed?: boolean
+}
+
+export async function fetchProducts(
+  tenantId: number,
+  page: number,
+  filters: ProductFilters = {},
+): Promise<ProductsPage> {
+  const { data } = await apiClient.get<ProductsPage>(`/tenants/${tenantId}/products`, {
+    params: { page, ...filters },
+  })
   return data
 }
 
