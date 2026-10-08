@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -11,8 +11,13 @@ import { LoadingState } from '../components/AsyncState'
 import { PageContainer } from '../components/PageContainer'
 import { fetchStatuses } from '../api/statuses'
 import { createProduct } from '../api/products'
+import { lookupCustomer } from '../api/customers'
 import { useAuth } from '../context/AuthContext'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { productFieldsSchema } from '../validation/productSchema'
+
+const EMAIL_LOOKUP_DEBOUNCE_MS = 400
+const EMAIL_SHAPE = /\S+@\S+\.\S+/
 
 const schema = yup.object({
   ...productFieldsSchema,
@@ -49,6 +54,34 @@ export function NewProductPage() {
       last_name: '',
     },
   })
+
+  const emailValue = methods.watch('email')
+  const debouncedEmail = useDebouncedValue(emailValue, EMAIL_LOOKUP_DEBOUNCE_MS)
+  const emailLooksValid = EMAIL_SHAPE.test(debouncedEmail)
+
+  const { data: existingCustomer, isFetching: lookupPending } = useQuery({
+    queryKey: ['customer-lookup', tenant?.id, debouncedEmail],
+    queryFn: () => lookupCustomer(tenant!.id, debouncedEmail),
+    enabled: Boolean(tenant) && emailLooksValid,
+  })
+
+  // Mirrors Products::CreateService#find_or_create_user, which silently
+  // ignores member_params for an email that already belongs to a customer —
+  // lock the name fields to what's on file instead of letting admins type a
+  // name that will be discarded.
+  useEffect(() => {
+    if (existingCustomer) {
+      methods.setValue('first_name', existingCustomer.first_name ?? '')
+      methods.setValue('last_name', existingCustomer.last_name ?? '')
+    } else {
+      methods.setValue('first_name', '')
+      methods.setValue('last_name', '')
+    }
+    // `methods.setValue` is a stable reference from react-hook-form — only
+    // re-run this when the lookup result itself changes.
+  }, [existingCustomer])
+
+  const customerLocked = Boolean(existingCustomer)
 
   const mutation = useMutation({
     mutationFn: (values: FormValues) =>
@@ -95,14 +128,22 @@ export function NewProductPage() {
                 <Form.Label>Customer email</Form.Label>
                 <Form.Control {...methods.register('email')} isInvalid={!!methods.formState.errors.email} />
                 <Form.Control.Feedback type="invalid">{methods.formState.errors.email?.message}</Form.Control.Feedback>
+                {!methods.formState.errors.email && lookupPending && (
+                  <Form.Text className="text-secondary">Checking for an existing customer…</Form.Text>
+                )}
+                {!methods.formState.errors.email && !lookupPending && customerLocked && (
+                  <Form.Text className="text-success">
+                    Existing customer found — name below is locked to their profile on file.
+                  </Form.Text>
+                )}
               </Form.Group>
               <Form.Group className="mb-3" controlId="newProductCustomerFirstName">
-                <Form.Label>New customer first name (only needed if they don't exist yet)</Form.Label>
-                <Form.Control {...methods.register('first_name')} />
+                <Form.Label>First name</Form.Label>
+                <Form.Control {...methods.register('first_name')} disabled={customerLocked} />
               </Form.Group>
               <Form.Group className="mb-4" controlId="newProductCustomerLastName">
-                <Form.Label>New customer last name</Form.Label>
-                <Form.Control {...methods.register('last_name')} />
+                <Form.Label>Last name</Form.Label>
+                <Form.Control {...methods.register('last_name')} disabled={customerLocked} />
               </Form.Group>
 
               <hr className="mb-4" />

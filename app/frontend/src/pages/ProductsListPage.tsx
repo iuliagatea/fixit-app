@@ -10,20 +10,16 @@ import { emptyProductFilters, ProductFilterBar } from '../components/ProductFilt
 import type { ProductFilterValues } from '../components/ProductFilterBar'
 import { ProductsTable } from '../components/ProductsTable'
 import { useAuth } from '../context/AuthContext'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
 const FILTER_DEBOUNCE_MS = 300
 
 export function ProductsListPage() {
   const { user, tenant } = useAuth()
   const [filters, setFilters] = useState<ProductFilterValues>(emptyProductFilters)
-  const [appliedFilters, setAppliedFilters] = useState<ProductFilterValues>(emptyProductFilters)
+  const appliedFilters = useDebouncedValue(filters, FILTER_DEBOUNCE_MS)
   const [activePage, setActivePage] = useState(1)
   const [completedPage, setCompletedPage] = useState(1)
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setAppliedFilters(filters), FILTER_DEBOUNCE_MS)
-    return () => clearTimeout(timeout)
-  }, [filters])
 
   useEffect(() => {
     setActivePage(1)

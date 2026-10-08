@@ -20,6 +20,9 @@ Rails.application.routes.draw do
         resources :statuses, only: %i[index create update destroy] do
           get 'products', on: :member
         end
+        resources :customers, only: [] do
+          get 'lookup', on: :collection
+        end
       end
 
       resources :categories, only: %i[index]

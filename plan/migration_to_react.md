@@ -662,4 +662,19 @@ The products list already showed customer email (previous change); this extends 
 - `npx tsc --noEmit` and a clean production build both pass.
 - Live end-to-end against the real dev server: confirmed `send_email` defaults to `true` for the 5 seeded statuses on a *real* (non-factory) tenant, created a status with `send_email: false`, and — the specific case that was broken — updated the "Waiting" status's `send_email` flag without changing its name and confirmed it now succeeds.
 
+---
+
+## New product form: autocomplete + lock customer details for existing emails (2026-10-08)
+
+`Products::CreateService#find_or_create_user` already silently ignores `member_params` when the entered email matches an existing tenant customer (`User.find_or_create_by(email:) do |user| ... end` only runs that block on create) — so typing a name for an existing customer was always a no-op server-side. The form just never told the admin that. Fixed by surfacing the same rule client-side: typing a known email now autofills and locks the name fields to what's on file.
+
+- New `Api::V1::CustomersController#lookup` (`GET /api/v1/tenants/:tenant_id/customers/lookup?email=`): case-insensitive exact match within `current_tenant.users`, reusing the existing shared `customer_json`. Admin-only (`verify_user`), same gating as product create/update. 404 when no match — a real "not found," not a `200` with `null`, to keep the not-found/success distinction explicit at the HTTP layer.
+- `NewProductPage`: watches the email field (react-hook-form's `watch`), debounces it 400ms (new `useDebouncedValue` hook — also used to replace `ProductsListPage`'s identical inline debounce, now de-duplicated), and runs the lookup via `useQuery` once the value looks like a real email. On a match: `setValue`s `first_name`/`last_name` from the response and disables both fields, with a "existing customer found" message. On no match (including when switching away from a previously-matched email): clears and re-enables them.
+
+**Verified:**
+- `bundle exec rspec` — 187 examples (4 new: found/case-insensitive, 404, tenant-scoped — doesn't leak another tenant's customer, non-admin rejected), same single pre-existing unrelated failure.
+- `npx jest` — 48/48 (10 new: 3 for `useDebouncedValue`, 3 for `lookupCustomer`'s 404-vs-rethrow handling, 4 for `NewProductPage`'s autofill/lock/unlock behavior, the last of which drives the real debounce with real timers rather than mocking it away).
+- `npx tsc --noEmit` and a clean production build both pass.
+- Live end-to-end against the real dev server: looked up an existing customer by a mixed-case email (confirmed case-insensitive match) and an unknown email (confirmed real `404`, not a silent empty match).
+
 
