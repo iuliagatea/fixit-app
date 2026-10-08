@@ -6,6 +6,13 @@ export interface ProductStatus {
   color: string
 }
 
+export interface Customer {
+  id: number
+  email: string
+  first_name: string | null
+  last_name: string | null
+}
+
 export interface ProductSummary {
   id: number
   code: string
@@ -15,7 +22,7 @@ export interface ProductSummary {
   estimated_value: string
   tenant_id: number
   updated_at: string
-  user: { id: number; email: string }
+  user: Customer
   current_status: ProductStatus | null
 }
 

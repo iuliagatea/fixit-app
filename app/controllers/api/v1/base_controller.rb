@@ -46,11 +46,23 @@ module Api
           estimated_value: product.estimated_value,
           tenant_id: product.tenant_id,
           updated_at: product.updated_at,
-          user: { id: product.user.id, email: product.user.email },
+          user: customer_json(product.user),
           current_status: status_json(product.current_status)
         }
         json[:estimates] = product.estimates.map { |estimate| estimate_json(estimate) } if include_estimates
         json
+      end
+
+      # Member is optional (has_one, not guaranteed to exist for every user —
+      # e.g. a tenant admin created before Member.create_org_admin ran, or a
+      # customer added without a name on file).
+      def customer_json(user)
+        {
+          id: user.id,
+          email: user.email,
+          first_name: user.member&.first_name,
+          last_name: user.member&.last_name
+        }
       end
 
       def status_json(status)

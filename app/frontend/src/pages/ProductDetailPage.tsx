@@ -6,6 +6,7 @@ import { fetchProduct, sendProductCard } from '../api/products'
 import { ErrorState, LoadingState } from '../components/AsyncState'
 import { PageContainer } from '../components/PageContainer'
 import { useAuth } from '../context/AuthContext'
+import { customerInitials, customerName } from '../utils/customer'
 
 export function ProductDetailPage() {
   const { user, tenant } = useAuth()
@@ -61,8 +62,6 @@ export function ProductDetailPage() {
               <dl className="row small mb-0">
                 <dt className="col-4 col-sm-3 text-secondary fw-normal">Expected completion</dt>
                 <dd className="col-8 col-sm-9">{data.expected_completion_date}</dd>
-                <dt className="col-4 col-sm-3 text-secondary fw-normal">Owner</dt>
-                <dd className="col-8 col-sm-9">{data.user.email}</dd>
                 {data.comments && (
                   <>
                     <dt className="col-4 col-sm-3 text-secondary fw-normal">Comments</dt>
@@ -97,6 +96,26 @@ export function ProductDetailPage() {
                 </Alert>
               )}
             </Card.Footer>
+          </Card>
+
+          <Card className="card-flat mb-3">
+            <Card.Body>
+              <Card.Title className="h6 mb-3">Customer</Card.Title>
+              <div className="d-flex align-items-center gap-3">
+                <span
+                  className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-semibold flex-shrink-0"
+                  style={{ width: 44, height: 44, fontSize: '0.85rem' }}
+                >
+                  {customerInitials(data.user)}
+                </span>
+                <div>
+                  <div className="fw-medium">{customerName(data.user) ?? <span className="text-secondary fst-italic">No name on file</span>}</div>
+                  <a href={`mailto:${data.user.email}`} className="small text-decoration-none">
+                    {data.user.email}
+                  </a>
+                </div>
+              </div>
+            </Card.Body>
           </Card>
 
           <Card className="card-flat">

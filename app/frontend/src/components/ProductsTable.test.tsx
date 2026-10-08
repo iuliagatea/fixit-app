@@ -19,7 +19,7 @@ function buildProduct(overrides: Partial<ProductSummary>): ProductSummary {
     estimated_value: '100.0',
     tenant_id: 1,
     updated_at: new Date().toISOString(),
-    user: { id: 1, email: 'customer@example.com' },
+    user: { id: 1, email: 'customer@example.com', first_name: null, last_name: null },
     current_status: { id: 1, name: 'Received', color: '#428bca' },
     ...overrides,
   }
@@ -42,7 +42,7 @@ function renderTable(products: ProductSummary[], showDueFlags = true) {
 
 describe('ProductsTable', () => {
   it('shows the customer email', () => {
-    renderTable([buildProduct({ user: { id: 2, email: 'jane@example.com' } })])
+    renderTable([buildProduct({ user: { id: 2, email: 'jane@example.com', first_name: null, last_name: null } })])
 
     expect(screen.getByText('jane@example.com')).toBeInTheDocument()
   })

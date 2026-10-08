@@ -633,4 +633,19 @@ Four requested changes to the products page, all server-backed (not client-side-
 - `npx tsc --noEmit` and a clean `vite:clobber` + production build both pass.
 - Live end-to-end against the real dev server: created four products across two customers (overdue, due-soon, far-future, and one moved to "Completed") and confirmed via real HTTP requests that the active/completed split, and all three filters (name, status, customer email), return exactly the expected subsets — not just asserted in specs.
 
+---
+
+## Full customer details on the product detail page (2026-10-08)
+
+The products list already showed customer email (previous change); this extends the product *detail* page to show the full customer profile the data model actually has: email plus first/last name (`Member`, `has_one` off `User` — optional, since not every customer has one on file, e.g. a tenant admin before `Member.create_org_admin` ran, or a customer added without a name).
+
+- `Api::V1::BaseController#product_json` now embeds a `customer_json` (id, email, first_name, last_name) instead of just id/email — used by both `ProductsController` and `StatusesController#products` (status board), so the shape is consistent everywhere a product's customer appears. Added `user: :member` to both eager-loading call sites (`ProductsController#index`, `Status#status_products`) to avoid N+1s now that the member is actually read.
+- `ProductDetailPage` gained a dedicated "Customer" card: avatar-style initials (first+last initial, falling back to the first two letters of the email when there's no name on file), full name or an italicized "No name on file", and the email as a `mailto:` link. Extracted the name/initials logic into `utils/customer.ts` (unit tested) rather than leaving it page-local, matching how `dueDate.ts` was handled.
+
+**Verified:**
+- `bundle exec rspec` — 181 examples (2 new: a customer with a member profile, and one without, to confirm the nil-safe fallback), same single pre-existing unrelated failure.
+- `npx jest` — 36/36 (6 new, covering the name-joining/fallback and initials logic).
+- `npx tsc --noEmit` and a clean production build both pass.
+- Live end-to-end against the real dev server: created one customer with a `Member` profile and one without, confirmed both render correctly via real HTTP requests to `/api/v1/tenants/:id/products/:id` (`first_name`/`last_name` populated vs. both `null`).
+
 

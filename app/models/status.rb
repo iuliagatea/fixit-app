@@ -9,8 +9,8 @@ class Status < ActiveRecord::Base
 
   def status_products(user)
     Product
-        .where(current_status_id: id)
-        .where('user_id = ? OR ? = true', user.id, user.is_admin)
-        .includes(:estimates, :user, :tenant)
+      .where(current_status_id: id)
+      .where('user_id = ? OR ? = true', user.id, user.is_admin)
+      .includes(:estimates, :tenant, user: :member)
   end
 end

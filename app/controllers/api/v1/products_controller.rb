@@ -8,7 +8,7 @@ module Api
       before_action :verify_user, except: %i[index show]
 
       def index
-        scoped = products.includes(:estimates, :tenant, :user, :statuses)
+        scoped = products.includes(:estimates, :tenant, :statuses, user: :member)
         scoped = apply_filters(scoped)
         paginated = paginate(scoped.order(created_at: :desc), params[:page], params[:per_page])
 

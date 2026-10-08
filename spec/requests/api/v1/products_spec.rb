@@ -124,6 +124,23 @@ RSpec.describe 'Api::V1::Products', type: :request do
       expect(body['id']).to eq(product.id)
       expect(body['estimates'].size).to eq(3)
       expect(body['current_status']['name']).to eq('Received')
+      expect(body['user']).to include(
+        'email' => customer.email,
+        'first_name' => customer.member.first_name,
+        'last_name' => customer.member.last_name
+      )
+    end
+
+    it 'returns nil names for a customer with no member profile on file' do
+      Tenant.set_current_tenant(tenant)
+      memberless_customer = create(:user, :regular)
+      product = create(:product, tenant_id: tenant.id, user: memberless_customer)
+      sign_in_as(admin_user)
+
+      get "/api/v1/tenants/#{tenant.id}/products/#{product.id}", as: :json
+
+      body = response.parsed_body
+      expect(body['user']).to include('email' => memberless_customer.email, 'first_name' => nil, 'last_name' => nil)
     end
 
     it "404s for a product the current (non-admin) user doesn't own" do
