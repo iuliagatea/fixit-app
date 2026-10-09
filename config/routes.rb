@@ -11,6 +11,7 @@ Rails.application.routes.draw do
       post 'sign_in', to: 'sessions#create'
       delete 'sign_out', to: 'sessions#destroy'
       get 'me', to: 'sessions#show'
+      post 'sign_up', to: 'registrations#create'
 
       resources :tenants, only: %i[show update] do
         post 'upgrade', on: :member
