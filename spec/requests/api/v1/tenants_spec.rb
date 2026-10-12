@@ -77,6 +77,69 @@ RSpec.describe 'Api::V1::Tenants', type: :request do
     end
   end
 
+  describe 'GET /api/v1/tenants/:id/dashboard' do
+    it 'returns status counts, stats, plan usage, and rating for an admin' do
+      received = tenant.statuses.find_by(name: 'Received')
+      completed = tenant.statuses.find_by(name: 'Completed')
+      create(:product, tenant_id: tenant.id, user: customer)
+      done = create(:product, tenant_id: tenant.id, user: customer)
+      done.transition_to_status!(completed)
+      create(:estimate, product: done, price: 100, quantity: 2)
+      create(:review, tenant: tenant, user: customer, rating: 4)
+      create(:review, tenant: tenant, user: customer, rating: 2)
+      sign_in_as(admin_user)
+
+      get "/api/v1/tenants/#{tenant.id}/dashboard", as: :json
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      counts_by_name = body['status_counts'].to_h { |s| [s['name'], s['count']] }
+      expect(counts_by_name[received.name]).to eq(1)
+      expect(counts_by_name[completed.name]).to eq(1)
+      expect(body['total_active_products']).to eq(1)
+      expect(body['completed_this_month']).to eq(1)
+      expect(body['plan']).to eq('plan' => 'free', 'product_count' => 2, 'limit' => 500)
+      expect(body['rating']).to eq('average' => 3.0, 'count' => 2)
+    end
+
+    it "scopes status counts and stats to a non-admin's own products, but reports the tenant-wide plan usage" do
+      create(:product, tenant_id: tenant.id, user: customer)
+      other_customer = begin
+        Tenant.set_current_tenant(tenant)
+        create(:user, :regular, member: create(:member))
+      end
+      create(:product, tenant_id: tenant.id, user: other_customer)
+      sign_in_as(customer)
+
+      get "/api/v1/tenants/#{tenant.id}/dashboard", as: :json
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body['total_active_products']).to eq(1)
+      expect(body['plan']).to eq('plan' => 'free', 'product_count' => 2, 'limit' => 500)
+    end
+
+    it 'reports no plan limit for a premium tenant' do
+      premium_tenant = create(:tenant, :premium)
+      Tenant.set_current_tenant(premium_tenant)
+      premium_admin = create(:user, :admin, password: password, password_confirmation: password)
+      premium_admin.confirm
+      sign_in_as(premium_admin)
+
+      get "/api/v1/tenants/#{premium_tenant.id}/dashboard", as: :json
+
+      expect(response.parsed_body['plan']).to eq('plan' => 'premium', 'product_count' => 0, 'limit' => nil)
+    end
+
+    it "rejects a tenant id that isn't the current tenant" do
+      sign_in_as(admin_user)
+
+      get "/api/v1/tenants/#{other_tenant.id}/dashboard", as: :json
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
   describe 'POST /api/v1/tenants/:id/upgrade' do
     it 'upgrades the plan and persists a payment when Stripe succeeds' do
       allow_any_instance_of(Payment).to receive(:process_payment).and_return(true)

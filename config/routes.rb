@@ -17,6 +17,7 @@ Rails.application.routes.draw do
 
       resources :tenants, only: %i[show update] do
         post 'upgrade', on: :member
+        get 'dashboard', on: :member
         resources :products, only: %i[index show create update] do
           post 'send_product_card', on: :member
         end

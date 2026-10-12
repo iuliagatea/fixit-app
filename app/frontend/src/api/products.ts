@@ -61,9 +61,10 @@ export async function fetchProducts(
   tenantId: number,
   page: number,
   filters: ProductFilters = {},
+  perPage?: number,
 ): Promise<ProductsPage> {
   const { data } = await apiClient.get<ProductsPage>(`/tenants/${tenantId}/products`, {
-    params: { page, ...filters },
+    params: { page, per_page: perPage, ...filters },
   })
   return data
 }
