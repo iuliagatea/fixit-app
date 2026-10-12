@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+  <%= render 'header' %>
+  <body>
+    <h2>Your product <%= @product.code %> - <%= @product.name %> with <%= @tenant.name %> is complete!</h2>
+    <p>We'd love to hear how it went. <%= link_to 'Leave a review', "#{app_url}/tenants/#{@tenant.id}" %>.</p>
+  </body>
+  <%= render 'footer' %>
+
+</html>

@@ -18,6 +18,9 @@ export function NavBar() {
         <Navbar.Toggle aria-controls="main-nav" />
         <Navbar.Collapse id="main-nav">
           <Nav className="me-auto">
+            <Nav.Link as={Link} to="/tenants" className="fw-medium">
+              Find a provider
+            </Nav.Link>
             {user && (
               <Nav.Link as={Link} to="/products" className="fw-medium">
                 Products

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'base/service_base'
+
 module Tenants
   class SearchService
     include ServiceBase

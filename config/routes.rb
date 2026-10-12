@@ -13,6 +13,8 @@ Rails.application.routes.draw do
       get 'me', to: 'sessions#show'
       post 'sign_up', to: 'registrations#create'
 
+      resources :tenant_directory, only: %i[index show]
+
       resources :tenants, only: %i[show update] do
         post 'upgrade', on: :member
         resources :products, only: %i[index show create update] do
@@ -24,6 +26,10 @@ Rails.application.routes.draw do
         resources :customers, only: [] do
           get 'lookup', on: :collection
         end
+      end
+
+      resources :tenants, only: [] do
+        resources :reviews, only: %i[create destroy]
       end
 
       resources :categories, only: %i[index]

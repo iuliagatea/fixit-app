@@ -53,6 +53,7 @@ class Product < ActiveRecord::Base
       product_statuses.create!(status: new_status)
 
       Products::UpdatedNotificationJob.perform_async(id) if new_status.send_email
+      Products::CompletedNotificationJob.perform_async(id) if new_status.name == 'Completed'
     end
   end
 

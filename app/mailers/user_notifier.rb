@@ -24,6 +24,17 @@ class UserNotifier < ApplicationMailer
     mail to: @product.user.email, subject: subject
   end
 
+  # Invites the customer to review the tenant once their product is marked
+  # Completed. Uses product.tenant rather than current_tenant - this runs
+  # from a Sidekiq job, where Thread.current[:tenant_id] (what current_tenant
+  # reads) isn't set the way it is during a request.
+  def product_completed(product)
+    @product = product
+    @tenant = product.tenant
+    subject = "#{@tenant.name} - How did we do?"
+    mail to: @product.user.email, subject: subject
+  end
+
   def contact_tenant(params)
     @message = params[:message]
     mail to: Tenant.find(params[:tenant_id]).users.first.email,

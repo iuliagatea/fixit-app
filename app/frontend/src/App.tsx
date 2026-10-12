@@ -13,6 +13,8 @@ import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
 import { StatusBoardPage } from './pages/StatusBoardPage'
 import { StatusesAdminPage } from './pages/StatusesAdminPage'
+import { TenantProfilePage } from './pages/TenantProfilePage'
+import { TenantSearchPage } from './pages/TenantSearchPage'
 import { TenantSettingsPage } from './pages/TenantSettingsPage'
 import { UpgradePlanPage } from './pages/UpgradePlanPage'
 
@@ -124,6 +126,8 @@ export function App() {
         <Route path="/sign-up" element={<SignUpPage />} />
         <Route path="/confirm" element={<ConfirmPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/tenants" element={<TenantSearchPage />} />
+        <Route path="/tenants/:id" element={<TenantProfilePage />} />
       </Routes>
     </div>
   )

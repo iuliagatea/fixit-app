@@ -99,6 +99,7 @@ ActiveRecord::Schema[7.2].define(version: 20180724095623112805) do
     t.text "review"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "rating"
     t.index ["tenant_id"], name: "index_reviews_on_tenant_id"
     t.index ["user_id"], name: "index_reviews_on_user_id"
   end

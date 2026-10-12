@@ -57,6 +57,16 @@ class Tenant < ActiveRecord::Base
     errors.add(:base, 'You must select at least one Category') if categories.blank?
   end
 
+  def average_rating
+    # .average returns a BigDecimal, which Rails' JSON serialization renders
+    # as a string rather than a number - cast to Float first.
+    reviews.where.not(rating: nil).average(:rating)&.to_f&.round(1)
+  end
+
+  def rated_reviews_count
+    reviews.where.not(rating: nil).count
+  end
+
   private
 
   def initialize_category

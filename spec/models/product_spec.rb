@@ -213,6 +213,22 @@ RSpec.describe Product, type: :model do
         expect(Products::UpdatedNotificationJob).not_to receive(:perform_async)
         product.transition_to_status!(status2)
       end
+
+      it 'schedules a completed-notification job when transitioning to a status named Completed' do
+        # Tenant#create_statuses already seeds a 'Completed' status for every
+        # tenant (Tenant::DEFAULT_STATUSES) - reuse it rather than creating a
+        # second one, which would violate the name/tenant_id uniqueness
+        # validation on Status.
+        completed_status = tenant.statuses.find_by(name: 'Completed')
+
+        expect(Products::CompletedNotificationJob).to receive(:perform_async).with(product.id)
+        product.transition_to_status!(completed_status)
+      end
+
+      it 'does not schedule a completed-notification job for any other status name' do
+        expect(Products::CompletedNotificationJob).not_to receive(:perform_async)
+        product.transition_to_status!(status2)
+      end
     end
 
     describe 'Callbacks' do
