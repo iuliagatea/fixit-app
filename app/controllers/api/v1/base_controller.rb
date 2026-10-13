@@ -34,6 +34,34 @@ module Api
                status: :unprocessable_entity
       end
 
+      # Shared by SessionsController#create and PasswordsController#update -
+      # signs a user in unless their account is inactive (e.g. unconfirmed).
+      # Returns true/false so callers can short-circuit on failure; not a
+      # pure predicate (it has the side effect of signing in), so it's
+      # deliberately not named with a `?`.
+      # rubocop:disable Naming/PredicateMethod
+      def sign_in_if_active(user)
+        unless user.active_for_authentication?
+          render json: { error: { message: user.inactive_message.to_s.humanize, code: 'inactive_account' } },
+                 status: :unauthorized
+          return false
+        end
+
+        sign_in(:user, user)
+        Tenant.set_current_tenant(user)
+        true
+      end
+      # rubocop:enable Naming/PredicateMethod
+
+      # Shared by SessionsController and PasswordsController - renders the
+      # current user/tenant in the same shape after any auth state change.
+      def render_current_user
+        render json: {
+          user: { id: current_user.id, email: current_user.email, is_admin: current_user.is_admin },
+          tenant: current_tenant ? { id: current_tenant.id, name: current_tenant.name, plan: current_tenant.plan } : nil
+        }
+      end
+
       # Shared JSON shaping, used by ProductsController and StatusesController
       # (status board / products-by-status).
       def product_json(product, include_estimates: false)

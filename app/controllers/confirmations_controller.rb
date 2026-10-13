@@ -2,7 +2,7 @@
 
 class ConfirmationsController < Devise::ConfirmationsController
   before_action :set_confirmable, only: %i[show update]
-  skip_before_action :authenticate_tenant!, only: %i[show]
+  skip_before_action :authenticate_tenant!, only: %i[show update]
 
   def update
     if @confirmable.attempt_set_password(user_params)
@@ -22,14 +22,14 @@ class ConfirmationsController < Devise::ConfirmationsController
       else
         log_action('invitee confirmation failed')
         logger.error "Invitee confirmation failed: #{resource.errors}"
-        respond_with_navigational(resource.errors, status: :unprocessable_entity) { render :new }
+        render :new, status: :unprocessable_entity
       end
 
     else
       log_action('invitee password set failed')
       logger.error 'Invitee password set failed'
       prep_do_show # prep for the form
-      respond_with_navigational(resource.errors, status: :unprocessable_entity) { render :show }
+      render :show, status: :unprocessable_entity
     end
   end
 
@@ -77,5 +77,16 @@ class ConfirmationsController < Devise::ConfirmationsController
   def set_confirmable
     @confirmable = User.find_or_initialize_with_error_by(:confirmation_token,
                                                          params[:confirmation_token])
+  end
+
+  # Prep for the "create password" form (show.html.erb): it needs `resource`
+  # (for form_for/resource.errors) and @confirmation_token (for the hidden field).
+  def prep_do_show
+    self.resource = @confirmable
+    @confirmation_token = params[:confirmation_token]
+  end
+
+  def user_params
+    params.require(:user).permit(:password, :password_confirmation)
   end
 end

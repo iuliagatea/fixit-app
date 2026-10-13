@@ -10,7 +10,7 @@ jest.mock('../api/client', () => ({
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>
 
 function Probe() {
-  const { user, tenant, loading, signIn, signOut } = useAuth()
+  const { user, tenant, loading, signIn, signOut, applySession } = useAuth()
 
   if (loading) return <p>loading</p>
 
@@ -20,6 +20,13 @@ function Probe() {
       <p>tenant: {tenant ? tenant.name : 'none'}</p>
       <button onClick={() => signIn('admin@example.com', 'secret')}>sign in</button>
       <button onClick={() => signOut()}>sign out</button>
+      <button
+        onClick={() =>
+          applySession({ user: { id: 9, email: 'applied@example.com', is_admin: false }, tenant: null })
+        }
+      >
+        apply session
+      </button>
     </div>
   )
 }
@@ -94,5 +101,25 @@ describe('AuthContext', () => {
 
     expect(mockApiClient.delete).toHaveBeenCalledWith('/sign_out')
     await waitFor(() => expect(screen.getByText('user: none')).toBeInTheDocument())
+  })
+
+  it('applySession sets user/tenant directly from a payload without calling /me again', async () => {
+    mockApiClient.get.mockResolvedValue({
+      data: { user: null, tenant: null },
+    })
+
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    )
+    await waitFor(() => expect(screen.getByText('user: none')).toBeInTheDocument())
+    mockApiClient.get.mockClear()
+
+    await userEvent.click(screen.getByText('apply session'))
+
+    await waitFor(() => expect(screen.getByText('user: applied@example.com')).toBeInTheDocument())
+    expect(screen.getByText('tenant: none')).toBeInTheDocument()
+    expect(mockApiClient.get).not.toHaveBeenCalled()
   })
 })

@@ -30,6 +30,22 @@ module ApplicationHelper
     flash_messages.join("\n").html_safe
   end
 
+  # Used by the Devise views (passwords, confirmations) to show validation
+  # errors on `resource` in the same alert style as bootstrap_flash. Not
+  # provided by any installed gem (there's no devise-bootstrap-views in the
+  # Gemfile) - these views called it as if it existed, which crashed every
+  # time `resource` had errors.
+  def bootstrap_devise_error_messages!
+    return '' if resource.errors.empty?
+
+    messages = resource.errors.full_messages.map { |msg| content_tag(:li, msg) }.join.html_safe
+    content_tag(:div, class: 'alert alert-danger') do
+      concat content_tag(:p, "#{pluralize(resource.errors.count, 'error')} prohibited this " \
+                             "#{resource.class.model_name.human.downcase} from being saved:")
+      concat content_tag(:ul, messages)
+    end
+  end
+
   def tenant_name(tenant_id)
     Tenant.find(tenant_id).name
   end

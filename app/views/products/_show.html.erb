@@ -1,27 +1,37 @@
 <%- model_class = Product -%>
-<dl class="dl-horizontal">
-  <dt><strong><%= model_class.human_attribute_name(:code) %>:</strong></dt>
-  <dd><%= @product.code %></dd>
-  <dt><strong><%= model_class.human_attribute_name(:name) %>:</strong></dt>
-  <dd><%= @product.name %></dd>
-  <dt><strong><%= model_class.human_attribute_name(:expected_completion_date) %>:</strong></dt>
-  <dd><%= @product.expected_completion_date.strftime("%d.%m.%Y") %></dd>
-  <dt><strong>Current status:</strong></dt>
-  <dd><%= @product.current_status.name %></dd>
-  <dt><strong><%= model_class.human_attribute_name(:comments) %>:</strong></dt>
-  <dd><%= @product.comments %></dd>
-</dl>
+<div class="pdf-card">
+  <h2 class="pdf-section-title">Details</h2>
+  <dl class="product-detail-list">
+    <dt><strong><%= model_class.human_attribute_name(:code) %>:</strong></dt>
+    <dd><%= @product.code %></dd>
+    <dt><strong><%= model_class.human_attribute_name(:name) %>:</strong></dt>
+    <dd><%= @product.name %></dd>
+    <dt><strong><%= model_class.human_attribute_name(:expected_completion_date) %>:</strong></dt>
+    <dd><%= @product.expected_completion_date.strftime("%d.%m.%Y") %></dd>
+    <dt><strong>Current status:</strong></dt>
+    <dd><%= @product.current_status.name %></dd>
+    <dt><strong><%= model_class.human_attribute_name(:comments) %>:</strong></dt>
+    <dd><%= @product.comments %></dd>
+  </dl>
+</div>
 <% if @product.product_statuses.size > 0 %>
-<h4>History</h4>
-<table class="table table-striped">
-  <tbody>
-    <% @product.product_statuses.each do |product_status| %>
-      <tr style="background-color: <%= product_status.status.color %>">
-        <td><%= product_status.status.name %></td>
-        <td><%= product_status.created_at.strftime("%d.%m.%Y %I:%M:%S") %></td>
+<div class="pdf-card">
+  <h2 class="pdf-section-title">History</h2>
+  <table class="pdf-table pdf-history-table">
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Date</th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <% @product.product_statuses.each do |product_status| %>
+        <tr>
+          <td><span class="status-badge" style="background-color: <%= product_status.status.color %>;"><%= product_status.status.name %></span></td>
+          <td><%= product_status.created_at.strftime("%d.%m.%Y %I:%M:%S") %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
 <% end %>
-<hr />

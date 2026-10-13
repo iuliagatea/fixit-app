@@ -15,6 +15,17 @@ class User < ActiveRecord::Base
   after_create :add_to_tenant
   before_destroy :clear_tenants
 
+  # Used by ConfirmationsController#update - lets an invited user (created with
+  # a random password via check_or_set_password, so skip_confirm_change_password
+  # is false) choose their own password as part of confirming their account.
+  # Returns true/false like #save, with validation errors left on the record.
+  def attempt_set_password(params)
+    self.password = params[:password]
+    self.password_confirmation = params[:password_confirmation]
+    self.skip_confirm_change_password = true
+    save(validate: true)
+  end
+
   def save_and_invite_member
     status = nil
 

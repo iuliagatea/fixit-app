@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Button, Container, Nav, Navbar } from 'react-bootstrap'
+import { Container, Nav, NavDropdown, Navbar } from 'react-bootstrap'
 import { useAuth } from '../context/AuthContext'
 
 function initials(email: string): string {
@@ -21,46 +21,49 @@ export function NavBar() {
             <Nav.Link as={Link} to="/tenants" className="fw-medium">
               Find a provider
             </Nav.Link>
-            {user && (
-              <Nav.Link as={Link} to="/products" className="fw-medium">
-                Products
-              </Nav.Link>
-            )}
-            {user && (
-              <Nav.Link as={Link} to="/status-board" className="fw-medium">
-                Status board
-              </Nav.Link>
-            )}
-            {user?.is_admin && (
-              <Nav.Link as={Link} to="/statuses" className="fw-medium">
-                Statuses
-              </Nav.Link>
-            )}
-            {user?.is_admin && (
-              <Nav.Link as={Link} to="/settings" className="fw-medium">
-                Settings
-              </Nav.Link>
-            )}
           </Nav>
           <Nav className="align-items-md-center gap-2 gap-md-3">
             {user ? (
-              <>
-                <div className="d-flex align-items-center gap-2">
-                  <span
-                    className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-semibold flex-shrink-0"
-                    style={{ width: 32, height: 32, fontSize: '0.7rem' }}
-                  >
-                    {initials(user.email)}
+              <NavDropdown
+                align="end"
+                title={
+                  <span className="d-inline-flex align-items-center gap-2">
+                    <span
+                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-semibold flex-shrink-0"
+                      style={{ width: 32, height: 32, fontSize: '0.7rem' }}
+                    >
+                      {initials(user.email)}
+                    </span>
+                    <span className="d-flex flex-column lh-sm text-start">
+                      <span className="small fw-medium">{user.email}</span>
+                      {tenant && <span className="small text-secondary">{tenant.name}</span>}
+                    </span>
                   </span>
-                  <div className="d-flex flex-column lh-sm">
-                    <span className="small fw-medium">{user.email}</span>
-                    {tenant && <span className="small text-secondary">{tenant.name}</span>}
-                  </div>
-                </div>
-                <Button variant="outline-secondary" size="sm" onClick={() => signOut()}>
-                  Sign out
-                </Button>
-              </>
+                }
+              >
+                <NavDropdown.Item as={Link} to="/products">
+                  Products
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/status-board">
+                  Status board
+                </NavDropdown.Item>
+                {user.is_admin && (
+                  <NavDropdown.Item as={Link} to="/statuses">
+                    Statuses
+                  </NavDropdown.Item>
+                )}
+                {user.is_admin && (
+                  <NavDropdown.Item as={Link} to="/settings">
+                    Settings
+                  </NavDropdown.Item>
+                )}
+                <NavDropdown.Divider />
+                <NavDropdown.Item as={Link} to="/account/password">
+                  Change password
+                </NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item onClick={() => signOut()}>Sign out</NavDropdown.Item>
+              </NavDropdown>
             ) : (
               <Nav.Link as={Link} to="/sign-in" className="fw-medium">
                 Sign in

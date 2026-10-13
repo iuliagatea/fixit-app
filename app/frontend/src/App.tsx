@@ -2,12 +2,15 @@ import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { NavBar } from './components/NavBar'
 import { useAuth } from './context/AuthContext'
+import { ChangePasswordPage } from './pages/ChangePasswordPage'
+import { ConfirmEditPage } from './pages/ConfirmEditPage'
 import { ConfirmPage } from './pages/ConfirmPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { EditProductPage } from './pages/EditProductPage'
 import { NewProductPage } from './pages/NewProductPage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
 import { ProductsListPage } from './pages/ProductsListPage'
+import { ResetPasswordEditPage } from './pages/ResetPasswordEditPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
@@ -115,6 +118,14 @@ export function App() {
           )}
         />
         <Route
+          path="/account/password"
+          element={(
+            <RequireAuth>
+              <ChangePasswordPage />
+            </RequireAuth>
+          )}
+        />
+        <Route
           path="/upgrade"
           element={(
             <RequireAdmin>
@@ -125,7 +136,9 @@ export function App() {
         <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/sign-up" element={<SignUpPage />} />
         <Route path="/confirm" element={<ConfirmPage />} />
+        <Route path="/confirm/edit" element={<ConfirmEditPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/reset-password/edit" element={<ResetPasswordEditPage />} />
         <Route path="/tenants" element={<TenantSearchPage />} />
         <Route path="/tenants/:id" element={<TenantProfilePage />} />
       </Routes>

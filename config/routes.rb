@@ -12,6 +12,14 @@ Rails.application.routes.draw do
       delete 'sign_out', to: 'sessions#destroy'
       get 'me', to: 'sessions#show'
       post 'sign_up', to: 'registrations#create'
+      post 'password', to: 'passwords#create'
+      put 'password', to: 'passwords#update'
+      patch 'password', to: 'passwords#update'
+      put 'me/password', to: 'passwords#change'
+      patch 'me/password', to: 'passwords#change'
+      post 'confirmation', to: 'confirmations#create'
+      put 'confirmation', to: 'confirmations#update'
+      patch 'confirmation', to: 'confirmations#update'
 
       resources :tenant_directory, only: %i[index show]
 

@@ -20,6 +20,7 @@ interface AuthState {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  applySession: (session: { user: CurrentUser; tenant: CurrentTenant | null }) => void
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined)
@@ -43,10 +44,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false))
   }, [])
 
+  const applySession = (session: { user: CurrentUser; tenant: CurrentTenant | null }) => {
+    setUser(session.user)
+    setTenant(session.tenant)
+  }
+
   const signIn = async (email: string, password: string) => {
     const { data } = await apiClient.post('/sign_in', { user: { email, password } })
-    setUser(data.user)
-    setTenant(data.tenant)
+    applySession(data)
   }
 
   const signOut = async () => {
@@ -55,7 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTenant(null)
   }
 
-  return <AuthContext.Provider value={{ user, tenant, loading, signIn, signOut }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, tenant, loading, signIn, signOut, applySession }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth(): AuthState {

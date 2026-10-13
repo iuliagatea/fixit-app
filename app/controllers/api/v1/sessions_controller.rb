@@ -30,26 +30,13 @@ module Api
       private
 
       def authenticate_and_respond(user)
-        unless user.active_for_authentication?
-          render json: { error: { message: user.inactive_message.to_s.humanize, code: 'inactive_account' } },
-                 status: :unauthorized
-          return
-        end
+        return unless sign_in_if_active(user)
 
-        sign_in(:user, user)
-        Tenant.set_current_tenant(user)
         render_current_user
       end
 
       def sign_in_params
         params.require(:user).permit(:email, :password)
-      end
-
-      def render_current_user
-        render json: {
-          user: { id: current_user.id, email: current_user.email, is_admin: current_user.is_admin },
-          tenant: current_tenant ? { id: current_tenant.id, name: current_tenant.name, plan: current_tenant.plan } : nil
-        }
       end
     end
   end

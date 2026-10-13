@@ -53,8 +53,11 @@ export function SignInPage() {
           />
         </Form.Group>
         <div className="text-end mb-3">
-          <Link to="/reset-password" className="small">
+          <Link to="/reset-password" className="small d-block">
             Forgot password?
+          </Link>
+          <Link to="/confirm" className="small">
+            Didn&apos;t receive confirmation instructions?
           </Link>
         </div>
         <Button type="submit" className="w-100" disabled={submitting}>
