@@ -21,6 +21,9 @@ export function NavBar() {
             <Nav.Link as={Link} to="/tenants" className="fw-medium">
               Find a provider
             </Nav.Link>
+            <Nav.Link as={Link} to="/about" className="fw-medium">
+              About
+            </Nav.Link>
           </Nav>
           <Nav className="align-items-md-center gap-2 gap-md-3">
             {user ? (

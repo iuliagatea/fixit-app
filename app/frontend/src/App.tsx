@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { NavBar } from './components/NavBar'
 import { useAuth } from './context/AuthContext'
+import { AboutPage } from './pages/AboutPage'
 import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { ConfirmEditPage } from './pages/ConfirmEditPage'
 import { ConfirmPage } from './pages/ConfirmPage'
@@ -141,6 +142,7 @@ export function App() {
         <Route path="/reset-password/edit" element={<ResetPasswordEditPage />} />
         <Route path="/tenants" element={<TenantSearchPage />} />
         <Route path="/tenants/:id" element={<TenantProfilePage />} />
+        <Route path="/about" element={<AboutPage />} />
       </Routes>
     </div>
   )
